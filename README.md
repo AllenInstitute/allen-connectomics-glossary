@@ -1,11 +1,15 @@
 # Allen Connectomics Glossary
 
+### → [lappalainenj.github.io/allen-connectomics-glossary](https://lappalainenj.github.io/allen-connectomics-glossary/)
+
 A searchable glossary and table reference for the two EM connectomics datasets used in
 the course — **MICrONS** and **V1DD** — plus a printable cheat sheet built from the same
 content. Definitions follow the [SWDB databook](https://allenswdb.github.io/anatomy/microns-em/em-background.html).
 
-**Open `index.html` in a browser.** There is no build step, no server, and no
-dependencies — double-clicking the file works, and so does GitHub Pages.
+The live site above is the easiest way in. It is served by GitHub Pages from `main`, so
+anything merged is live within a minute or so. There is no build step, no server and no
+dependencies, which also means you can clone the repo and double-click `index.html` —
+it behaves identically offline.
 
 | | |
 |---|---|
