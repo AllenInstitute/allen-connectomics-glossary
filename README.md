@@ -22,16 +22,21 @@ To refresh `dist/` after editing `data/`: `node scripts/bundle.mjs` (and
 ## The three views
 
 **Glossary** — 116 terms, alphabetical by default, switchable to grouping by category.
-Search matches names, definitions and category names. Every term has a permalink
-(`index.html#term-voxel`) you can paste into an email.
+Entries read left to right along each row. Search matches names, definitions and
+category names; the category legend doubles as a filter, and clicking pills narrows the
+glossary in either ordering. Every term has a permalink (`index.html#term-voxel`) you
+can paste into an email.
+
+The illustrations are generated rather than hand-drawn. They are under review, and
+errors cannot be ruled out at this stage — the site says so next to the legend and in
+the footer, and the note is repeated on the printed sheet.
 
 **Tables** — the CAVE annotation tables we suggest people actually query, one overview
 per dataset, with row counts, key columns and one-line descriptions. One colour-coded
-column per *kind of thing a table records*, side by side, so the whole catalogue reads
-at a glance. There are no arrows and nothing is claimed to be downstream of the column
-to its left — the columns are a classification, not a sequence. The greyed entries at
-each end are the underlying measurements and the products you assemble yourself; they
-are shown for context and are not queryable tables.
+column per kind of thing a table records, side by side, so the whole catalogue reads at
+a glance, above a row of headline numbers for the dataset. The greyed entries at each
+end are the underlying measurements and the products you assemble yourself; they are
+shown for context and are not queryable tables.
 
 The dataset control applies here.
 
@@ -47,9 +52,7 @@ its other print options, for the table section it includes.
 
 ## Colour means one thing at a time
 
-This was a specific piece of feedback on the earlier draft, so it is worth stating as a
-rule the code follows. Each palette has one meaning, one place it appears, and a legend
-where it appears:
+Each palette has one meaning, one place it appears, and a legend where it appears:
 
 - **Glossary cards: colour = the term's category.** Left rule and eyebrow, nowhere else.
 - **Table overview: colour = what the table records.** Lane headers and node rules,

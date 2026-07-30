@@ -18,13 +18,14 @@ const LANGS  = window.LANGUAGES;
 
 const STORE = "acg.v1";
 const S = Object.assign(
-  // `ds` scopes the table catalogue only. The glossary always shows every term
-  // and flags the few that belong to one dataset, which is what people asked for.
-  { view: "glossary", ds: "all", sort: "alpha", q: "",
+  // `ds` scopes the table catalogue only; the glossary always shows every term
+  // and flags the few that belong to one dataset.
+  { view: "glossary", ds: "all", sort: "alpha", q: "", cats: [],
     theme: "auto", lang: "python",
     art: true, tables: true, snips: true, dens: "normal", sheetDs: "all" },
   readStore()
 );
+// cats: the categories the legend pills have narrowed to. Empty means all of them.
 
 function readStore(){ try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } }
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} }
@@ -52,7 +53,17 @@ function matches(t, q){
 
 function visibleTerms(){
   const q = S.q.trim().toLowerCase();
-  return TERMS.filter(t => matches(t, q));
+  const cats = S.cats && S.cats.length ? new Set(S.cats) : null;
+  return TERMS.filter(t => matches(t, q) && (!cats || cats.has(t.category)));
+}
+
+// how many terms each category would contribute, ignoring the category filter
+// itself, so the pill counts do not collapse to zero as you narrow
+function catCounts(){
+  const q = S.q.trim().toLowerCase();
+  const n = {};
+  TERMS.filter(t => matches(t, q)).forEach(t => { n[t.category] = (n[t.category] || 0) + 1; });
+  return n;
 }
 
 // crude but stable Python/R colouring: comments, strings, keywords
@@ -100,24 +111,45 @@ function renderGlossary(){
   if (!list.length){ out.innerHTML = ""; $("#glossEmpty").hidden = false; return; }
   $("#glossEmpty").hidden = true;
 
+  const byName = (a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase());
+
   if (S.sort === "alpha"){
-    const sorted = [...list].sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
-    out.innerHTML = sorted.map(t => cardHTML(t, q)).join("");
+    out.className = "grid";
+    out.innerHTML = [...list].sort(byName).map(t => cardHTML(t, q)).join("");
   } else {
+    // each category becomes its own titled section with its own grid, so the
+    // grouping is unmistakable rather than implied by a thin rule
+    out.className = "";
     out.innerHTML = CATS.map(c => {
-      const items = list.filter(t => t.category === c.id)
-        .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
+      const items = list.filter(t => t.category === c.id).sort(byName);
       if (!items.length) return "";
-      return `<div class="g-head" style="color:${c.color}"><h2>${esc(c.label)}</h2><span class="n">${items.length}</span></div>`
-           + items.map(t => cardHTML(t, q)).join("");
+      return `<section class="catsec">
+        <div class="sec-head" style="color:${c.color}">
+          <i class="dot"></i><h2>${esc(c.label)}</h2><span class="n">${items.length}</span>
+        </div>
+        <div class="grid">${items.map(t => cardHTML(t, q)).join("")}</div>
+      </section>`;
     }).join("");
   }
-  $("#count").textContent = `${list.length} of ${TERMS.length} terms`;
+
+  const filtered = S.q.trim() || (S.cats && S.cats.length);
+  $("#count").textContent = filtered
+    ? `${list.length} of ${TERMS.length} terms` : `${TERMS.length} terms`;
+  renderCatPills();
+}
+
+function renderCatPills(){
+  const n = catCounts();
+  const on = new Set(S.cats || []);
+  $("#catLegend").innerHTML = CATS.map(c =>
+    `<button class="catpill" data-cat="${c.id}" style="--cc:${c.color}"
+             aria-pressed="${on.has(c.id)}"><i></i>${esc(c.label)}
+       <span class="n">${n[c.id] || 0}</span></button>`).join("")
+    + (on.size ? `<button class="catclear" type="button">show all</button>` : "");
 }
 
 function renderLegends(){
-  $("#catLegend").innerHTML = CATS.map(c =>
-    `<span><i style="background:${c.color}"></i>${esc(c.label)}</span>`).join("");
+  renderCatPills();
   $("#anatLegend").innerHTML = window.ANATOMY.map(a =>
     `<span><i style="background:var(--${a.id})"></i>${esc(a.label)}</span>`).join("");
 }
@@ -128,6 +160,42 @@ function tableRows(dsId){
   const q = S.q.trim().toLowerCase();
   return TBL[dsId].filter(t => !q ||
     (t.name + " " + t.desc + " " + (t.keys || []).join(" ")).toLowerCase().includes(q));
+}
+
+/* Headline numbers, read straight off the catalogue so they cannot drift out of
+   step with it. Anything the catalogue does not carry is simply left out. */
+const num = s => { const n = +String(s).replace(/[^0-9]/g, ""); return Number.isFinite(n) && n ? n : null; };
+const compact = n =>
+  n >= 1e9 ? [(n / 1e9).toFixed(n < 1e10 ? 1 : 0), "B"] :
+  n >= 1e6 ? [(n / 1e6).toFixed(n < 1e7 ? 1 : 0), "M"] :
+  n >= 1e3 ? [(n / 1e3).toFixed(n < 1e4 ? 1 : 0), "k"] : [String(n), ""];
+
+function datasetStats(dsId){
+  const all = TBL[dsId];
+  const find = name => all.find(t => t.name === name);
+  const biggest = group => all.filter(t => t.group === group && num(t.rows))
+    .sort((a, b) => num(b.rows) - num(a.rows))[0];
+
+  const syn   = find(DS[dsId].synapses);
+  const nuc   = find("nucleus_detection_v0");
+  const proof = find("proofreading_status_and_strategy");
+  const coreg = biggest("coregistration");
+  const types = biggest("classification");
+
+  const out = [
+    { v: String(all.filter(t => !t.derived).length), u: "", l: "tables" },
+    syn   && { n: num(syn.rows),   l: "synapses",        sub: syn.name },
+    nuc   && { n: num(nuc.rows),   l: "nuclei detected", sub: nuc.name },
+    types && { n: num(types.rows), l: "cells typed",     sub: types.name },
+    proof && { n: num(proof.rows), l: "arbors proofread", sub: proof.name },
+    coreg && { n: num(coreg.rows), l: "units coregistered", sub: coreg.name },
+  ].filter(Boolean);
+
+  return `<div class="statcard">${out.map(s => {
+    const [v, u] = s.n != null ? compact(s.n) : [s.v, s.u];
+    return `<div class="stat"><b>${esc(v)}${u ? `<span class="u">${u}</span>` : ""}</b>
+      <span>${esc(s.l)}</span>${s.sub ? `<em>${esc(s.sub)}</em>` : ""}</div>`;
+  }).join("")}</div>`;
 }
 
 /* One lane per group, colour-coded, laid out side by side. The lanes are a
@@ -167,6 +235,7 @@ function datasetBlock(dsId){
       </div>
     </header>
     <p class="blurb">${esc(d.blurb)}</p>
+    ${datasetStats(dsId)}
     ${rows.length ? `<div class="lanes">${lanes}</div>`
                   : `<p class="empty">No tables match that search.</p>`}
   </section>`;
@@ -176,9 +245,9 @@ function renderTables(){
   const ids = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
   $("#tablesOut").innerHTML =
     `<h2 class="sec-h">Tables at a glance</h2>
-     <p class="sec-p">Every column is a kind of thing a table records, not a stage in a pipeline —
-     nothing here is downstream of the column to its left. Greyed entries are the underlying
-     measurements and the products you build yourself; the rest are CAVE tables you can query.</p>`
+     <p class="sec-p">Each column collects the tables that record one kind of thing. Greyed entries are
+     the underlying measurements and the products you assemble yourself; the rest are CAVE tables you
+     can query.</p>`
     + ids.map(datasetBlock).join("");
   renderSnips();
   $("#count").textContent = ids
@@ -218,7 +287,7 @@ function renderSheet(){
     : list.map(t => sheetTerm(t)).join("");
 
   const tablesBody = !S.tables ? "" :
-    `<h2 class="sh-s">Tables at a glance · columns are kinds of table, not stages</h2>` +
+    `<h2 class="sh-s">Tables at a glance</h2>` +
     dsIds.map(id => `<div class="sh-ds">${esc(DS[id].label)}</div><div class="sh-lanes">` +
       GROUPS.map(g => {
         const items = TBL[id].filter(t => t.group === g.id);
@@ -249,7 +318,8 @@ function renderSheet(){
     <div class="sh-gloss ${esc(S.dens)}">${glossBody}</div>
     ${tablesBody}
     ${snipsBody}
-    <div class="sh-foot">Colour on a glossary card = its category. Colour in the table overview = what that table records. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse). ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
+    <div class="sh-foot">Colour on a glossary card = its category. Colour in the table overview = what that table records. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse).<br>
+    Illustrations are generated and still under review; where a picture and a definition disagree, trust the definition. ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
 }
 
 function sheetTerm(t){
@@ -368,6 +438,17 @@ function init(){
     const b = e.target.closest("button[data-lang]");
     if (!b || b.disabled) return;
     S.lang = b.dataset.lang; save(); renderSnips();
+  });
+
+  // the category legend is also the filter
+  $("#catLegend").addEventListener("click", e => {
+    if (e.target.closest(".catclear")){ S.cats = []; save(); render(); return; }
+    const b = e.target.closest(".catpill");
+    if (!b) return;
+    const id = b.dataset.cat, on = new Set(S.cats || []);
+    on.has(id) ? on.delete(id) : on.add(id);
+    S.cats = [...on];
+    save(); render();
   });
 
   // a term's table chips jump to that table in the Tables view

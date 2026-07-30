@@ -23,18 +23,19 @@
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  --paper:#fbfaf8;
+  /* cool, EM-greyscale neutrals */
+  --paper:#f4f6f8;
   --card:#ffffff;
-  --ink:#14181d;
-  --muted:#5b6572;
-  --faint:#8d95a1;
-  --line:#e2e0db;
-  --line-2:#c9c6bf;
-  --panel:#f2f1ed;
+  --ink:#12161c;
+  --muted:#55606d;
+  --faint:#8b95a1;
+  --line:#e0e5ea;
+  --line-2:#cfd6de;
+  --panel:#eef1f4;
 
-  --accent:#0e7f8c;
-  --accent-ink:#0a5c66;
-  --accent-soft:#e3f1f2;
+  --accent:#0d7d88;
+  --accent-ink:#0a5a63;
+  --accent-soft:color-mix(in srgb, var(--accent) 10%, transparent);
 
   /* anatomy — used only inside illustrations */
   --scaffold:#7c8695;
@@ -55,24 +56,24 @@
 
 @media (prefers-color-scheme: dark){
   :root{
-    --paper:#12151a; --card:#181c22; --ink:#e7e9ec; --muted:#a2abb7; --faint:#767f8c;
-    --line:#2a3038; --line-2:#3b434e; --panel:#1e232a;
-    --accent:#4fbecb; --accent-ink:#8fdbe4; --accent-soft:#123037;
+    --paper:#0b0f14; --card:#141a21; --ink:#e7edf3; --muted:#97a1af; --faint:#67707e;
+    --line:#232b35; --line-2:#303a46; --panel:#1a2129;
+    --accent:#3cced9; --accent-ink:#86e4ec; --accent-soft:color-mix(in srgb, var(--accent) 14%, transparent);
     --scaffold:#8f99a8; --neuron:#c2cad6; --dendrite:#71a4dd; --axon:#d7a355; --synapse:#e2809c;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -14px rgba(0,0,0,.8);
   }
 }
 :root[data-theme="dark"]{
-  --paper:#12151a; --card:#181c22; --ink:#e7e9ec; --muted:#a2abb7; --faint:#767f8c;
-  --line:#2a3038; --line-2:#3b434e; --panel:#1e232a;
-  --accent:#4fbecb; --accent-ink:#8fdbe4; --accent-soft:#123037;
+  --paper:#0b0f14; --card:#141a21; --ink:#e7edf3; --muted:#97a1af; --faint:#67707e;
+  --line:#232b35; --line-2:#303a46; --panel:#1a2129;
+  --accent:#3cced9; --accent-ink:#86e4ec; --accent-soft:color-mix(in srgb, var(--accent) 14%, transparent);
   --scaffold:#8f99a8; --neuron:#c2cad6; --dendrite:#71a4dd; --axon:#d7a355; --synapse:#e2809c;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -14px rgba(0,0,0,.8);
 }
 :root[data-theme="light"]{
-  --paper:#fbfaf8; --card:#ffffff; --ink:#14181d; --muted:#5b6572; --faint:#8d95a1;
-  --line:#e2e0db; --line-2:#c9c6bf; --panel:#f2f1ed;
-  --accent:#0e7f8c; --accent-ink:#0a5c66; --accent-soft:#e3f1f2;
+  --paper:#f4f6f8; --card:#ffffff; --ink:#12161c; --muted:#55606d; --faint:#8b95a1;
+  --line:#e0e5ea; --line-2:#cfd6de; --panel:#eef1f4;
+  --accent:#0d7d88; --accent-ink:#0a5a63; --accent-soft:color-mix(in srgb, var(--accent) 10%, transparent);
   --scaffold:#7c8695; --neuron:#39424f; --dendrite:#3f6fa8; --axon:#b07a2b; --synapse:#c04a6e;
   --shadow:0 1px 2px rgba(20,24,29,.05), 0 6px 18px -12px rgba(20,24,29,.25);
 }
@@ -155,25 +156,45 @@ main{padding:1.4rem 20px 3rem}
 .legend summary::before{content:"▸ "; color:var(--faint)}
 .legend[open] summary::before{content:"▾ "}
 .legend .hint{font-family:var(--sans); text-transform:none; letter-spacing:0; font-size:.72rem; color:var(--faint)}
-.legend-body{display:flex; flex-wrap:wrap; gap:.2rem .8rem; padding:.5rem 0 0 .9rem}
+.legend-body{display:flex; flex-wrap:wrap; gap:.3rem; padding:.5rem 0 0 .9rem; align-items:center}
 .legend-body span{display:inline-flex; align-items:center; gap:.35rem; color:var(--muted); font-size:.72rem}
 .legend-body i{width:9px; height:9px; border-radius:2px; flex:none}
 .legend-body.anat i{border-radius:99px}
+.legend-body.anat{gap:.2rem .8rem}
+
+/* the category legend doubles as a filter — clicking a pill narrows the glossary */
+.catpill{appearance:none; font:inherit; font-size:.72rem; cursor:pointer; color:var(--muted);
+  background:var(--card); border:1px solid var(--line); border-radius:99px;
+  padding:.16rem .6rem .16rem .45rem; display:inline-flex; align-items:center; gap:.35rem}
+.catpill i{width:9px; height:9px; border-radius:2px; flex:none; background:var(--cc)}
+.catpill:hover{border-color:var(--line-2); color:var(--ink)}
+.catpill[aria-pressed="true"]{border-color:var(--cc); color:var(--ink);
+  background:color-mix(in srgb, var(--cc) 12%, transparent); font-weight:600}
+.catpill .n{font-family:var(--mono); font-size:.6rem; color:var(--faint); font-variant-numeric:tabular-nums}
+.catclear{appearance:none; font:inherit; font-size:.68rem; cursor:pointer; background:none;
+  border:0; color:var(--accent-ink); text-decoration:underline; padding:.16rem .3rem}
 
 /* ── glossary grid ───────────────────────────────────────────── */
-.grid{columns:4 250px; column-gap:14px}
-.g-head{break-inside:avoid; break-after:avoid; margin:0 0 8px; padding-bottom:3px;
-  display:flex; align-items:baseline; gap:.5rem; border-bottom:1.5px solid currentColor}
-.g-head:not(:first-child){margin-top:14px}
-.g-head h2{margin:0; font-size:.78rem; letter-spacing:.02em; font-weight:700}
-.g-head .n{margin-left:auto; font-family:var(--mono); font-size:.62rem; opacity:.7;
+/* A grid, not multi-column: entries then read left to right along each row,
+   which is the order people expect from an alphabetical list. */
+/* cards stretch to the row height so the slack sits inside a card rather than
+   as a hole in the page */
+.grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(262px, 1fr)); gap:12px}
+
+.catsec{margin:0 0 1.9rem}
+.catsec .sec-head{display:flex; align-items:baseline; gap:.6rem; margin:0 0 .75rem;
+  padding-bottom:.4rem; border-bottom:2px solid currentColor}
+.catsec .sec-head h2{margin:0; font-size:1.06rem; letter-spacing:-.017em; color:var(--ink)}
+.catsec .sec-head .dot{width:10px; height:10px; border-radius:3px; background:currentColor; flex:none}
+.catsec .sec-head .n{margin-left:auto; font-family:var(--mono); font-size:.65rem; color:var(--faint);
   font-variant-numeric:tabular-nums}
 
-.card{break-inside:avoid; display:inline-block; width:100%; margin:0 0 14px;
+.card{display:flex; flex-direction:column;
   background:var(--card); border:1px solid var(--line); border-left:3px solid var(--line-2);
   border-radius:var(--r); padding:.55rem .65rem .6rem; box-shadow:var(--shadow)}
 .card .art{background:var(--panel); border:1px solid var(--line); border-radius:5px;
   padding:3px 4px; margin-bottom:.4rem}
+.card .eb{margin-top:auto}          /* text block hugs the bottom of a stretched card */
 .card .art svg{display:block; width:100%; height:auto; color:var(--neuron)}
 .card .eb{font-family:var(--mono); font-size:.56rem; font-weight:700; letter-spacing:.09em; margin-bottom:1px}
 .card h3{margin:0; font-size:.92rem; font-weight:700; line-height:1.2; letter-spacing:-.012em}
@@ -213,7 +234,20 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 .dsblock > header .facts{margin-left:auto; font-family:var(--mono); font-size:.63rem; color:var(--muted);
   display:flex; flex-wrap:wrap; gap:.15rem .8rem}
 .dsblock > header .facts b{color:var(--ink); font-weight:600}
-.dsblock > p.blurb{margin:.5rem 0 1rem; color:var(--muted); font-size:.84rem; max-width:70ch}
+.dsblock > p.blurb{margin:.5rem 0 .9rem; color:var(--muted); font-size:.84rem; max-width:70ch}
+
+/* at-a-glance numbers for a dataset, read off the table catalogue itself */
+.statcard{display:grid; grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:var(--r);
+  overflow:hidden; margin:0 0 1.1rem}
+.stat{background:var(--card); padding:.55rem .7rem .6rem; min-width:0}
+.stat b{display:block; font-size:1.16rem; font-weight:700; letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums; line-height:1.15}
+.stat b .u{font-size:.78rem; font-weight:600; color:var(--muted); letter-spacing:0; margin-left:.5px}
+.stat > span{display:block; margin-top:.1rem; font-family:var(--mono); font-size:.57rem;
+  text-transform:uppercase; letter-spacing:.075em; color:var(--faint)}
+.stat em{display:block; font-style:normal; font-family:var(--mono); font-size:.55rem;
+  color:var(--faint); opacity:.85; word-break:break-all; margin-top:.15rem}
 
 /* Lanes: one column per kind of table. Side by side because it reads well as an
    overview, NOT because it is a sequence — hence no connectors of any sort. */
@@ -293,12 +327,14 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 .sheet h2.sh-s{font-family:var(--mono); font-size:6pt; text-transform:uppercase; letter-spacing:.1em;
   color:#8d95a1; border-bottom:1px solid #e2e0db; padding-bottom:2px; margin:9px 0 6px;
   break-after:avoid; page-break-after:avoid}
-.sheet .sh-gloss{column-gap:8px}
-.sheet .sh-gloss.tight{columns:5 1.4in}
-.sheet .sh-gloss.normal{columns:4 1.7in}
-.sheet .sh-gloss.loose{columns:3 2.2in}
-.sheet .sh-g{break-inside:avoid; page-break-inside:avoid; display:inline-block; width:100%;
-  margin:0 0 5px; border-left:2.5px solid #c9c6bf; padding:1px 2px 4px 4px}
+/* a grid so entries read left to right along a row, as they do on screen */
+.sheet .sh-gloss{display:grid; gap:5px 8px; align-items:stretch}
+.sheet .sh-gloss.tight{grid-template-columns:repeat(5, minmax(0, 1fr))}
+.sheet .sh-gloss.normal{grid-template-columns:repeat(4, minmax(0, 1fr))}
+.sheet .sh-gloss.loose{grid-template-columns:repeat(3, minmax(0, 1fr))}
+.sheet .sh-g{break-inside:avoid; page-break-inside:avoid; display:flex; flex-direction:column;
+  border-left:2.5px solid #c9c6bf; padding:1px 2px 4px 4px}
+.sheet .sh-g .eb{margin-top:auto}
 .sheet .sh-g .art{border:1px solid #e2e0db; border-radius:4px; background:#f2f1ed; padding:2px 3px; margin-bottom:1px}
 .sheet .sh-g .art svg{display:block; width:100%; height:auto; color:#39424f}
 .sheet .sh-g .eb{font-family:var(--mono); font-size:4.6pt; font-weight:700; letter-spacing:.05em}
@@ -335,6 +371,8 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 /* ── footer ──────────────────────────────────────────────────── */
 .foot{border-top:1px solid var(--line); padding:1.2rem 0 2.5rem; color:var(--muted); font-size:.79rem}
 .foot p{margin:0 0 .3rem; max-width:80ch}
+.caveat{font-size:.72rem; color:var(--faint); line-height:1.4; max-width:74ch}
+.legend .caveat{padding:.35rem 0 0 .9rem}
 .foot .rev{font-family:var(--mono); font-size:.65rem; color:var(--faint)}
 
 @media (max-width:720px){
@@ -412,12 +450,15 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   <section id="view-glossary" class="view-pane">
     <div class="legends">
       <details class="legend" open>
-        <summary>Category <span class="hint">— the colour on a card's edge</span></summary>
+        <summary>Category <span class="hint">— the colour on a card's edge. Click to filter.</span></summary>
         <div class="legend-body" id="catLegend"></div>
       </details>
       <details class="legend">
         <summary>Illustration <span class="hint">— colour inside a drawing means anatomy, never category</span></summary>
         <div class="legend-body anat" id="anatLegend"></div>
+        <p class="caveat">The illustrations are generated rather than hand-drawn. They are being checked
+        by the people who know the data, but errors cannot be ruled out at this stage — read them as
+        sketches of the idea, and trust the definition and the databook over the picture.</p>
       </details>
     </div>
     <div id="glossary" class="grid"></div>
@@ -468,6 +509,9 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 <footer class="foot no-print">
   <div class="wrap">
     <p>Definitions follow the <a id="dbLink" href="https://allenswdb.github.io/anatomy/microns-em/em-background.html">SWDB databook</a>. Corrections and additions are welcome — everything on this page comes from the four files in <code>data/</code>.</p>
+    <p class="caveat">The illustrations are generated rather than hand-drawn. They are under review by
+    the people who know the data, but errors cannot be ruled out at this stage. Where a picture and a
+    definition disagree, the definition and the databook are the ones to trust.</p>
     <p class="rev" id="rev"></p>
   </div>
 </footer>
@@ -978,13 +1022,14 @@ const LANGS  = window.LANGUAGES;
 
 const STORE = "acg.v1";
 const S = Object.assign(
-  // `ds` scopes the table catalogue only. The glossary always shows every term
-  // and flags the few that belong to one dataset, which is what people asked for.
-  { view: "glossary", ds: "all", sort: "alpha", q: "",
+  // `ds` scopes the table catalogue only; the glossary always shows every term
+  // and flags the few that belong to one dataset.
+  { view: "glossary", ds: "all", sort: "alpha", q: "", cats: [],
     theme: "auto", lang: "python",
     art: true, tables: true, snips: true, dens: "normal", sheetDs: "all" },
   readStore()
 );
+// cats: the categories the legend pills have narrowed to. Empty means all of them.
 
 function readStore(){ try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } }
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} }
@@ -1012,7 +1057,17 @@ function matches(t, q){
 
 function visibleTerms(){
   const q = S.q.trim().toLowerCase();
-  return TERMS.filter(t => matches(t, q));
+  const cats = S.cats && S.cats.length ? new Set(S.cats) : null;
+  return TERMS.filter(t => matches(t, q) && (!cats || cats.has(t.category)));
+}
+
+// how many terms each category would contribute, ignoring the category filter
+// itself, so the pill counts do not collapse to zero as you narrow
+function catCounts(){
+  const q = S.q.trim().toLowerCase();
+  const n = {};
+  TERMS.filter(t => matches(t, q)).forEach(t => { n[t.category] = (n[t.category] || 0) + 1; });
+  return n;
 }
 
 // crude but stable Python/R colouring: comments, strings, keywords
@@ -1060,24 +1115,45 @@ function renderGlossary(){
   if (!list.length){ out.innerHTML = ""; $("#glossEmpty").hidden = false; return; }
   $("#glossEmpty").hidden = true;
 
+  const byName = (a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase());
+
   if (S.sort === "alpha"){
-    const sorted = [...list].sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
-    out.innerHTML = sorted.map(t => cardHTML(t, q)).join("");
+    out.className = "grid";
+    out.innerHTML = [...list].sort(byName).map(t => cardHTML(t, q)).join("");
   } else {
+    // each category becomes its own titled section with its own grid, so the
+    // grouping is unmistakable rather than implied by a thin rule
+    out.className = "";
     out.innerHTML = CATS.map(c => {
-      const items = list.filter(t => t.category === c.id)
-        .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
+      const items = list.filter(t => t.category === c.id).sort(byName);
       if (!items.length) return "";
-      return `<div class="g-head" style="color:${c.color}"><h2>${esc(c.label)}</h2><span class="n">${items.length}</span></div>`
-           + items.map(t => cardHTML(t, q)).join("");
+      return `<section class="catsec">
+        <div class="sec-head" style="color:${c.color}">
+          <i class="dot"></i><h2>${esc(c.label)}</h2><span class="n">${items.length}</span>
+        </div>
+        <div class="grid">${items.map(t => cardHTML(t, q)).join("")}</div>
+      </section>`;
     }).join("");
   }
-  $("#count").textContent = `${list.length} of ${TERMS.length} terms`;
+
+  const filtered = S.q.trim() || (S.cats && S.cats.length);
+  $("#count").textContent = filtered
+    ? `${list.length} of ${TERMS.length} terms` : `${TERMS.length} terms`;
+  renderCatPills();
+}
+
+function renderCatPills(){
+  const n = catCounts();
+  const on = new Set(S.cats || []);
+  $("#catLegend").innerHTML = CATS.map(c =>
+    `<button class="catpill" data-cat="${c.id}" style="--cc:${c.color}"
+             aria-pressed="${on.has(c.id)}"><i></i>${esc(c.label)}
+       <span class="n">${n[c.id] || 0}</span></button>`).join("")
+    + (on.size ? `<button class="catclear" type="button">show all</button>` : "");
 }
 
 function renderLegends(){
-  $("#catLegend").innerHTML = CATS.map(c =>
-    `<span><i style="background:${c.color}"></i>${esc(c.label)}</span>`).join("");
+  renderCatPills();
   $("#anatLegend").innerHTML = window.ANATOMY.map(a =>
     `<span><i style="background:var(--${a.id})"></i>${esc(a.label)}</span>`).join("");
 }
@@ -1088,6 +1164,42 @@ function tableRows(dsId){
   const q = S.q.trim().toLowerCase();
   return TBL[dsId].filter(t => !q ||
     (t.name + " " + t.desc + " " + (t.keys || []).join(" ")).toLowerCase().includes(q));
+}
+
+/* Headline numbers, read straight off the catalogue so they cannot drift out of
+   step with it. Anything the catalogue does not carry is simply left out. */
+const num = s => { const n = +String(s).replace(/[^0-9]/g, ""); return Number.isFinite(n) && n ? n : null; };
+const compact = n =>
+  n >= 1e9 ? [(n / 1e9).toFixed(n < 1e10 ? 1 : 0), "B"] :
+  n >= 1e6 ? [(n / 1e6).toFixed(n < 1e7 ? 1 : 0), "M"] :
+  n >= 1e3 ? [(n / 1e3).toFixed(n < 1e4 ? 1 : 0), "k"] : [String(n), ""];
+
+function datasetStats(dsId){
+  const all = TBL[dsId];
+  const find = name => all.find(t => t.name === name);
+  const biggest = group => all.filter(t => t.group === group && num(t.rows))
+    .sort((a, b) => num(b.rows) - num(a.rows))[0];
+
+  const syn   = find(DS[dsId].synapses);
+  const nuc   = find("nucleus_detection_v0");
+  const proof = find("proofreading_status_and_strategy");
+  const coreg = biggest("coregistration");
+  const types = biggest("classification");
+
+  const out = [
+    { v: String(all.filter(t => !t.derived).length), u: "", l: "tables" },
+    syn   && { n: num(syn.rows),   l: "synapses",        sub: syn.name },
+    nuc   && { n: num(nuc.rows),   l: "nuclei detected", sub: nuc.name },
+    types && { n: num(types.rows), l: "cells typed",     sub: types.name },
+    proof && { n: num(proof.rows), l: "arbors proofread", sub: proof.name },
+    coreg && { n: num(coreg.rows), l: "units coregistered", sub: coreg.name },
+  ].filter(Boolean);
+
+  return `<div class="statcard">${out.map(s => {
+    const [v, u] = s.n != null ? compact(s.n) : [s.v, s.u];
+    return `<div class="stat"><b>${esc(v)}${u ? `<span class="u">${u}</span>` : ""}</b>
+      <span>${esc(s.l)}</span>${s.sub ? `<em>${esc(s.sub)}</em>` : ""}</div>`;
+  }).join("")}</div>`;
 }
 
 /* One lane per group, colour-coded, laid out side by side. The lanes are a
@@ -1127,6 +1239,7 @@ function datasetBlock(dsId){
       </div>
     </header>
     <p class="blurb">${esc(d.blurb)}</p>
+    ${datasetStats(dsId)}
     ${rows.length ? `<div class="lanes">${lanes}</div>`
                   : `<p class="empty">No tables match that search.</p>`}
   </section>`;
@@ -1136,9 +1249,9 @@ function renderTables(){
   const ids = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
   $("#tablesOut").innerHTML =
     `<h2 class="sec-h">Tables at a glance</h2>
-     <p class="sec-p">Every column is a kind of thing a table records, not a stage in a pipeline —
-     nothing here is downstream of the column to its left. Greyed entries are the underlying
-     measurements and the products you build yourself; the rest are CAVE tables you can query.</p>`
+     <p class="sec-p">Each column collects the tables that record one kind of thing. Greyed entries are
+     the underlying measurements and the products you assemble yourself; the rest are CAVE tables you
+     can query.</p>`
     + ids.map(datasetBlock).join("");
   renderSnips();
   $("#count").textContent = ids
@@ -1178,7 +1291,7 @@ function renderSheet(){
     : list.map(t => sheetTerm(t)).join("");
 
   const tablesBody = !S.tables ? "" :
-    `<h2 class="sh-s">Tables at a glance · columns are kinds of table, not stages</h2>` +
+    `<h2 class="sh-s">Tables at a glance</h2>` +
     dsIds.map(id => `<div class="sh-ds">${esc(DS[id].label)}</div><div class="sh-lanes">` +
       GROUPS.map(g => {
         const items = TBL[id].filter(t => t.group === g.id);
@@ -1209,7 +1322,8 @@ function renderSheet(){
     <div class="sh-gloss ${esc(S.dens)}">${glossBody}</div>
     ${tablesBody}
     ${snipsBody}
-    <div class="sh-foot">Colour on a glossary card = its category. Colour in the table overview = what that table records. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse). ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
+    <div class="sh-foot">Colour on a glossary card = its category. Colour in the table overview = what that table records. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse).<br>
+    Illustrations are generated and still under review; where a picture and a definition disagree, trust the definition. ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
 }
 
 function sheetTerm(t){
@@ -1328,6 +1442,17 @@ function init(){
     const b = e.target.closest("button[data-lang]");
     if (!b || b.disabled) return;
     S.lang = b.dataset.lang; save(); renderSnips();
+  });
+
+  // the category legend is also the filter
+  $("#catLegend").addEventListener("click", e => {
+    if (e.target.closest(".catclear")){ S.cats = []; save(); render(); return; }
+    const b = e.target.closest(".catpill");
+    if (!b) return;
+    const id = b.dataset.cat, on = new Set(S.cats || []);
+    on.has(id) ? on.delete(id) : on.add(id);
+    S.cats = [...on];
+    save(); render();
   });
 
   // a term's table chips jump to that table in the Tables view
