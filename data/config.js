@@ -7,6 +7,8 @@ window.SITE = {
   // shown in the footer; bump when you make a change worth flagging to readers
   revision: "2026-07",
   databook: "https://allenswdb.github.io/anatomy/microns-em/em-background.html",
+  // the Community tab opens this in a new tab; clear it to drop the tab
+  community: "https://community.brain-map.org/",
 };
 
 window.DATASETS = {

@@ -108,11 +108,15 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* the view switcher sits in the control bar, ahead of the controls it governs */
 .views{display:flex; gap:.15rem; padding-right:.85rem; margin-right:.15rem;
   border-right:1px solid var(--line)}
-.views.alone{border-right:0; padding-right:0}   /* nothing follows it to divide from */
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap}
 .view:hover{color:var(--ink); background:var(--panel)}
 .view[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:600}
+/* leaves the site, so it is set apart from the tabs that switch views */
+a.view.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.25rem;
+  margin-left:.35rem; padding-left:.9rem; border-left:1px solid var(--line); border-radius:0}
+a.view.out:hover{color:var(--accent-ink); background:none}
+a.view.out span{font-size:.72em; opacity:.8}
 
 .theme{appearance:none; border:1px solid var(--line); background:var(--card); color:var(--muted);
   width:30px; height:30px; border-radius:99px; cursor:pointer; font-size:.85rem; line-height:1; flex:none}
@@ -216,14 +220,6 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 
 .empty{text-align:center; color:var(--faint); padding:3rem 0}
 
-/* ── a view that is not built yet ────────────────────────────── */
-.placeholder{max-width:56ch; margin:3.5rem auto 5rem; padding:2rem 2.2rem;
-  background:var(--card); border:1px dashed var(--line-2); border-radius:14px}
-.placeholder .ph-eyebrow{margin:0 0 .5rem; font-family:var(--mono); font-size:.62rem;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--accent-ink)}
-.placeholder h2{margin:0 0 .7rem; font-size:1.3rem; letter-spacing:-.02em; text-wrap:balance;
-  line-height:1.3}
-.placeholder p{margin:0; color:var(--muted); font-size:.88rem}
 
 /* ── tables view ─────────────────────────────────────────────── */
 .sec-h{font-size:1.05rem; margin:0 0 .2rem; letter-spacing:-.015em}
@@ -394,7 +390,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   .topbar,.foot,.no-print,.legends,.skip{display:none !important}
   main{padding:0}
   .wrap{max-width:none; padding:0}
-  #view-glossary,#view-tables,#view-community{display:none !important}
+  #view-glossary,#view-tables{display:none !important}
   #view-sheet{display:block !important}
   .sheet{max-width:none; margin:0; padding:0; box-shadow:none; border-radius:0}
   *{-webkit-print-color-adjust:exact; print-color-adjust:exact}

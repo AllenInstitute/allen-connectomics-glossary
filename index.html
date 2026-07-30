@@ -28,7 +28,8 @@
       <button class="view" data-view="glossary" aria-current="page">Glossary</button>
       <button class="view" data-view="tables">Tables</button>
       <button class="view" data-view="sheet">Cheat sheet</button>
-      <button class="view" data-view="community">Community</button>
+      <a class="view out" id="communityLink" href="https://community.brain-map.org/"
+         target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
     </nav>
 
     <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden>
@@ -80,16 +81,6 @@
       <h2 class="sec-h">Recipes</h2>
       <div id="snips"></div>
     </section>
-  </section>
-
-  <!-- ── community ────────────────────────────────────────────── -->
-  <section id="view-community" class="view-pane" hidden>
-    <div class="placeholder">
-      <p class="ph-eyebrow">Community</p>
-      <h2>Here you may find a knowledge-sharing forum in the future.</h2>
-      <p>A place to ask what a column really means, post the query that finally worked, and
-      leave a warning for whoever hits the same thing next.</p>
-    </div>
   </section>
 
   <!-- ── cheat sheet ──────────────────────────────────────────── -->

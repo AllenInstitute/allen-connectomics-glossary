@@ -355,7 +355,7 @@ function doPrint(){
    one entry, so a link to a single definition can be pasted into an email.
    The view routes carry a "/" so they cannot collide with an element id and make
    the browser jump the page on load. */
-const VIEWS = ["glossary", "tables", "sheet", "community"];
+const VIEWS = ["glossary", "tables", "sheet"];
 
 function readHash(){
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
@@ -375,15 +375,12 @@ function writeHash(){
 
 function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
-  $$(".view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
+  $$("button.view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
   // each control appears only where it does something
-  $("#sortCtl").hidden  = S.view === "tables"    || S.view === "community";
-  $("#dsCtl").hidden    = S.view !== "tables";
-  $("#searchCtl").hidden = S.view === "community";
-  $(".views").classList.toggle("alone", S.view === "community");
+  $("#sortCtl").hidden = S.view === "tables";
+  $("#dsCtl").hidden   = S.view !== "tables";
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
-  else if (S.view === "community") $("#count").textContent = "";
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
 }
 
@@ -396,6 +393,9 @@ function applyTheme(){
 function init(){
   $("#siteTitle").textContent = window.SITE.title;
   $("#dbLink").href           = window.SITE.databook;
+  const forum = $("#communityLink");
+  if (window.SITE.community) forum.href = window.SITE.community;
+  else forum.remove();
   $("#rev").textContent       = `${window.SITE.title} · revision ${window.SITE.revision} · ${TERMS.length} terms · ${Object.values(TBL).reduce((n, a) => n + a.length, 0)} tables`;
   document.title = window.SITE.title;
 
@@ -411,7 +411,7 @@ function init(){
 
   const target = readHash();
 
-  $$(".view").forEach(b => b.onclick = () => { S.view = b.dataset.view; save(); render(); writeHash(); });
+  $$("button.view").forEach(b => b.onclick = () => { S.view = b.dataset.view; save(); render(); writeHash(); });
   $$(".dsb").forEach(b => b.onclick = () => {
     S.ds = b.dataset.ds; $$(".dsb").forEach(x => x.setAttribute("aria-pressed", String(x === b))); save(); render();
   });

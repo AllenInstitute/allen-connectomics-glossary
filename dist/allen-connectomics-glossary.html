@@ -116,11 +116,15 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* the view switcher sits in the control bar, ahead of the controls it governs */
 .views{display:flex; gap:.15rem; padding-right:.85rem; margin-right:.15rem;
   border-right:1px solid var(--line)}
-.views.alone{border-right:0; padding-right:0}   /* nothing follows it to divide from */
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap}
 .view:hover{color:var(--ink); background:var(--panel)}
 .view[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:600}
+/* leaves the site, so it is set apart from the tabs that switch views */
+a.view.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.25rem;
+  margin-left:.35rem; padding-left:.9rem; border-left:1px solid var(--line); border-radius:0}
+a.view.out:hover{color:var(--accent-ink); background:none}
+a.view.out span{font-size:.72em; opacity:.8}
 
 .theme{appearance:none; border:1px solid var(--line); background:var(--card); color:var(--muted);
   width:30px; height:30px; border-radius:99px; cursor:pointer; font-size:.85rem; line-height:1; flex:none}
@@ -224,14 +228,6 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 
 .empty{text-align:center; color:var(--faint); padding:3rem 0}
 
-/* ── a view that is not built yet ────────────────────────────── */
-.placeholder{max-width:56ch; margin:3.5rem auto 5rem; padding:2rem 2.2rem;
-  background:var(--card); border:1px dashed var(--line-2); border-radius:14px}
-.placeholder .ph-eyebrow{margin:0 0 .5rem; font-family:var(--mono); font-size:.62rem;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--accent-ink)}
-.placeholder h2{margin:0 0 .7rem; font-size:1.3rem; letter-spacing:-.02em; text-wrap:balance;
-  line-height:1.3}
-.placeholder p{margin:0; color:var(--muted); font-size:.88rem}
 
 /* ── tables view ─────────────────────────────────────────────── */
 .sec-h{font-size:1.05rem; margin:0 0 .2rem; letter-spacing:-.015em}
@@ -402,7 +398,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   .topbar,.foot,.no-print,.legends,.skip{display:none !important}
   main{padding:0}
   .wrap{max-width:none; padding:0}
-  #view-glossary,#view-tables,#view-community{display:none !important}
+  #view-glossary,#view-tables{display:none !important}
   #view-sheet{display:block !important}
   .sheet{max-width:none; margin:0; padding:0; box-shadow:none; border-radius:0}
   *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -431,7 +427,8 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <button class="view" data-view="glossary" aria-current="page">Glossary</button>
       <button class="view" data-view="tables">Tables</button>
       <button class="view" data-view="sheet">Cheat sheet</button>
-      <button class="view" data-view="community">Community</button>
+      <a class="view out" id="communityLink" href="https://community.brain-map.org/"
+         target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
     </nav>
 
     <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden>
@@ -483,16 +480,6 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <h2 class="sec-h">Recipes</h2>
       <div id="snips"></div>
     </section>
-  </section>
-
-  <!-- ── community ────────────────────────────────────────────── -->
-  <section id="view-community" class="view-pane" hidden>
-    <div class="placeholder">
-      <p class="ph-eyebrow">Community</p>
-      <h2>Here you may find a knowledge-sharing forum in the future.</h2>
-      <p>A place to ask what a column really means, post the query that finally worked, and
-      leave a warning for whoever hits the same thing next.</p>
-    </div>
   </section>
 
   <!-- ── cheat sheet ──────────────────────────────────────────── -->
@@ -547,6 +534,8 @@ window.SITE = {
   // shown in the footer; bump when you make a change worth flagging to readers
   revision: "2026-07",
   databook: "https://allenswdb.github.io/anatomy/microns-em/em-background.html",
+  // the Community tab opens this in a new tab; clear it to drop the tab
+  community: "https://community.brain-map.org/",
 };
 
 window.DATASETS = {
@@ -1379,7 +1368,7 @@ function doPrint(){
    one entry, so a link to a single definition can be pasted into an email.
    The view routes carry a "/" so they cannot collide with an element id and make
    the browser jump the page on load. */
-const VIEWS = ["glossary", "tables", "sheet", "community"];
+const VIEWS = ["glossary", "tables", "sheet"];
 
 function readHash(){
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
@@ -1399,15 +1388,12 @@ function writeHash(){
 
 function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
-  $$(".view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
+  $$("button.view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
   // each control appears only where it does something
-  $("#sortCtl").hidden  = S.view === "tables"    || S.view === "community";
-  $("#dsCtl").hidden    = S.view !== "tables";
-  $("#searchCtl").hidden = S.view === "community";
-  $(".views").classList.toggle("alone", S.view === "community");
+  $("#sortCtl").hidden = S.view === "tables";
+  $("#dsCtl").hidden   = S.view !== "tables";
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
-  else if (S.view === "community") $("#count").textContent = "";
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
 }
 
@@ -1420,6 +1406,9 @@ function applyTheme(){
 function init(){
   $("#siteTitle").textContent = window.SITE.title;
   $("#dbLink").href           = window.SITE.databook;
+  const forum = $("#communityLink");
+  if (window.SITE.community) forum.href = window.SITE.community;
+  else forum.remove();
   $("#rev").textContent       = `${window.SITE.title} · revision ${window.SITE.revision} · ${TERMS.length} terms · ${Object.values(TBL).reduce((n, a) => n + a.length, 0)} tables`;
   document.title = window.SITE.title;
 
@@ -1435,7 +1424,7 @@ function init(){
 
   const target = readHash();
 
-  $$(".view").forEach(b => b.onclick = () => { S.view = b.dataset.view; save(); render(); writeHash(); });
+  $$("button.view").forEach(b => b.onclick = () => { S.view = b.dataset.view; save(); render(); writeHash(); });
   $$(".dsb").forEach(b => b.onclick = () => {
     S.ds = b.dataset.ds; $$(".dsb").forEach(x => x.setAttribute("aria-pressed", String(x === b))); save(); render();
   });

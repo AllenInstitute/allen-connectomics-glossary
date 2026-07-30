@@ -9,7 +9,7 @@ dependencies — double-clicking the file works, and so does GitHub Pages.
 
 | | |
 |---|---|
-| `index.html` | The site: Glossary, Tables, Cheat sheet, Community |
+| `index.html` | The site: Glossary, Tables, Cheat sheet |
 | `builder.html` | Cheat sheet builder — place blocks on pages by hand |
 | `data/` | **Everything you would want to edit lives here** |
 | `assets/` | Styling and behaviour |
@@ -45,7 +45,9 @@ controls are set to. It flows across as many US Letter pages as the content need
 never splits an entry across a page break. Print or save to PDF from the button, or just
 press ⌘P / Ctrl+P from any view.
 
-**Community** — a placeholder for a knowledge-sharing forum. Nothing behind it yet.
+**Community** is not a view — it opens the [Allen Brain Map community forum](https://community.brain-map.org/)
+in a new tab. The URL lives in `data/config.js` under `SITE.community`; clear it and the tab
+disappears.
 
 The dataset control (All / MICrONS / V1DD) belongs to the Tables view, where choosing
 one is a real question. The glossary always shows every term and marks the handful that
