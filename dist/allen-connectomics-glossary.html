@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Allen Connectomics Glossary — MICrONS &amp; V1DD</title>
+<title>Allen Connectomics Glossary</title>
 <meta name="description" content="A searchable glossary and table reference for the MICrONS and V1DD electron-microscopy connectomics datasets.">
 <style>
 /* ==========================================================================
@@ -116,6 +116,7 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* the view switcher sits in the control bar, ahead of the controls it governs */
 .views{display:flex; gap:.15rem; padding-right:.85rem; margin-right:.15rem;
   border-right:1px solid var(--line)}
+.views.alone{border-right:0; padding-right:0}   /* nothing follows it to divide from */
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap}
 .view:hover{color:var(--ink); background:var(--panel)}
@@ -222,6 +223,15 @@ main{padding:1.4rem 20px 3rem}
 mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 .1em}
 
 .empty{text-align:center; color:var(--faint); padding:3rem 0}
+
+/* ── a view that is not built yet ────────────────────────────── */
+.placeholder{max-width:56ch; margin:3.5rem auto 5rem; padding:2rem 2.2rem;
+  background:var(--card); border:1px dashed var(--line-2); border-radius:14px}
+.placeholder .ph-eyebrow{margin:0 0 .5rem; font-family:var(--mono); font-size:.62rem;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--accent-ink)}
+.placeholder h2{margin:0 0 .7rem; font-size:1.3rem; letter-spacing:-.02em; text-wrap:balance;
+  line-height:1.3}
+.placeholder p{margin:0; color:var(--muted); font-size:.88rem}
 
 /* ── tables view ─────────────────────────────────────────────── */
 .sec-h{font-size:1.05rem; margin:0 0 .2rem; letter-spacing:-.015em}
@@ -392,7 +402,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   .topbar,.foot,.no-print,.legends,.skip{display:none !important}
   main{padding:0}
   .wrap{max-width:none; padding:0}
-  #view-glossary,#view-tables{display:none !important}
+  #view-glossary,#view-tables,#view-community{display:none !important}
   #view-sheet{display:block !important}
   .sheet{max-width:none; margin:0; padding:0; box-shadow:none; border-radius:0}
   *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -408,7 +418,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   <div class="wrap topbar-in">
     <div class="brand">
       <span class="mark" aria-hidden="true"></span>
-      <span class="brand-t"><b id="siteTitle">Allen Connectomics Glossary</b><i id="siteSub">MICrONS &amp; V1DD</i></span>
+      <span class="brand-t"><b id="siteTitle">Allen Connectomics Glossary</b></span>
     </div>
 
     <button class="theme" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">
@@ -421,15 +431,16 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <button class="view" data-view="glossary" aria-current="page">Glossary</button>
       <button class="view" data-view="tables">Tables</button>
       <button class="view" data-view="sheet">Cheat sheet</button>
+      <button class="view" data-view="community">Community</button>
     </nav>
 
     <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden>
-      <button class="dsb" data-ds="all" aria-pressed="true">Both datasets</button>
+      <button class="dsb" data-ds="all" aria-pressed="true">All datasets</button>
       <button class="dsb" data-ds="microns" aria-pressed="false">MICrONS</button>
       <button class="dsb" data-ds="v1dd" aria-pressed="false">V1DD</button>
     </div>
 
-    <label class="search">
+    <label class="search" id="searchCtl">
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <input type="search" id="q" placeholder="Search terms, definitions, table names…" autocomplete="off" spellcheck="false">
     </label>
@@ -474,6 +485,16 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
     </section>
   </section>
 
+  <!-- ── community ────────────────────────────────────────────── -->
+  <section id="view-community" class="view-pane" hidden>
+    <div class="placeholder">
+      <p class="ph-eyebrow">Community</p>
+      <h2>Here you may find a knowledge-sharing forum in the future.</h2>
+      <p>A place to ask what a column really means, post the query that finally worked, and
+      leave a warning for whoever hits the same thing next.</p>
+    </div>
+  </section>
+
   <!-- ── cheat sheet ──────────────────────────────────────────── -->
   <section id="view-sheet" class="view-pane" hidden>
     <div class="sheet-ctl no-print">
@@ -485,7 +506,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
         <label><input type="checkbox" id="optSnips" checked> Recipes</label>
         <label class="dens">Tables for
           <select id="optSheetDs">
-            <option value="all" selected>both datasets</option>
+            <option value="all" selected>all datasets</option>
             <option value="microns">MICrONS</option>
             <option value="v1dd">V1DD</option>
           </select>
@@ -523,7 +544,6 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 
 window.SITE = {
   title: "Allen Connectomics Glossary",
-  subtitle: "MICrONS & V1DD",
   // shown in the footer; bump when you make a change worth flagging to readers
   revision: "2026-07",
   databook: "https://allenswdb.github.io/anatomy/microns-em/em-background.html",
@@ -1280,7 +1300,7 @@ function renderSheet(){
   const list = [...visibleTerms()].sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
   const byCat = S.sort === "category";
   const dsIds = S.sheetDs === "all" ? ["microns", "v1dd"] : [S.sheetDs];
-  const scope = S.sheetDs === "all" ? "MICrONS & V1DD" : DS[S.sheetDs].label;
+  const scope = dsIds.map(id => DS[id].label).join(" & ");
 
   const glossBody = byCat
     ? CATS.map(c => {
@@ -1359,7 +1379,7 @@ function doPrint(){
    one entry, so a link to a single definition can be pasted into an email.
    The view routes carry a "/" so they cannot collide with an element id and make
    the browser jump the page on load. */
-const VIEWS = ["glossary", "tables", "sheet"];
+const VIEWS = ["glossary", "tables", "sheet", "community"];
 
 function readHash(){
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
@@ -1381,10 +1401,13 @@ function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
   $$(".view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
   // each control appears only where it does something
-  $("#sortCtl").hidden = S.view === "tables";
-  $("#dsCtl").hidden   = S.view !== "tables";
+  $("#sortCtl").hidden  = S.view === "tables"    || S.view === "community";
+  $("#dsCtl").hidden    = S.view !== "tables";
+  $("#searchCtl").hidden = S.view === "community";
+  $(".views").classList.toggle("alone", S.view === "community");
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
+  else if (S.view === "community") $("#count").textContent = "";
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
 }
 
@@ -1396,10 +1419,9 @@ function applyTheme(){
 
 function init(){
   $("#siteTitle").textContent = window.SITE.title;
-  $("#siteSub").textContent   = window.SITE.subtitle;
   $("#dbLink").href           = window.SITE.databook;
   $("#rev").textContent       = `${window.SITE.title} · revision ${window.SITE.revision} · ${TERMS.length} terms · ${Object.values(TBL).reduce((n, a) => n + a.length, 0)} tables`;
-  document.title = `${window.SITE.title} — ${window.SITE.subtitle}`;
+  document.title = window.SITE.title;
 
   renderLegends();
 
