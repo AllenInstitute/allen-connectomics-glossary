@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allen Connectomics Glossary — MICrONS &amp; V1DD</title>
+<meta name="description" content="A searchable glossary and table reference for the MICrONS and V1DD electron-microscopy connectomics datasets.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="brand-t"><b id="siteTitle">Allen Connectomics Glossary</b><i id="siteSub">MICrONS &amp; V1DD</i></span>
+    </div>
+
+    <nav class="views" aria-label="Views">
+      <button class="view" data-view="glossary" aria-current="page">Glossary</button>
+      <button class="view" data-view="tables">Tables</button>
+      <button class="view" data-view="sheet">Cheat sheet</button>
+    </nav>
+
+    <button class="theme" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">
+      <span aria-hidden="true">◐</span>
+    </button>
+  </div>
+
+  <div class="wrap ctrlbar">
+    <div class="ds" role="group" aria-label="Dataset">
+      <button class="dsb" data-ds="all" aria-pressed="true">Both datasets</button>
+      <button class="dsb" data-ds="microns" aria-pressed="false">MICrONS</button>
+      <button class="dsb" data-ds="v1dd" aria-pressed="false">V1DD</button>
+    </div>
+
+    <label class="search">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="search" id="q" placeholder="Search terms, definitions, table names…" autocomplete="off" spellcheck="false">
+    </label>
+
+    <div class="sort" role="group" aria-label="Sort" id="sortCtl">
+      <span class="lab">Sort</span>
+      <button class="sb" data-sort="alpha" aria-pressed="true">A–Z</button>
+      <button class="sb" data-sort="category" aria-pressed="false">By category</button>
+    </div>
+
+    <span class="count" id="count"></span>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <!-- ── glossary ─────────────────────────────────────────────── -->
+  <section id="view-glossary" class="view-pane">
+    <div class="legends">
+      <details class="legend" open>
+        <summary>Category <span class="hint">— the colour on a card's edge</span></summary>
+        <div class="legend-body" id="catLegend"></div>
+      </details>
+      <details class="legend">
+        <summary>Illustration <span class="hint">— colour inside a drawing means anatomy, never category</span></summary>
+        <div class="legend-body anat" id="anatLegend"></div>
+      </details>
+    </div>
+    <div id="glossary" class="grid"></div>
+    <p class="empty" id="glossEmpty" hidden>Nothing matches that search.</p>
+  </section>
+
+  <!-- ── tables ───────────────────────────────────────────────── -->
+  <section id="view-tables" class="view-pane" hidden>
+    <div id="tablesOut"></div>
+    <section class="snips">
+      <h2 class="sec-h">Recipes</h2>
+      <div id="snips"></div>
+    </section>
+  </section>
+
+  <!-- ── cheat sheet ──────────────────────────────────────────── -->
+  <section id="view-sheet" class="view-pane" hidden>
+    <div class="sheet-ctl no-print">
+      <h2 class="sec-h">Printable cheat sheet</h2>
+      <p class="sec-p">Built from whatever the dataset, search and sort controls above are set to. Content flows across as many pages as it needs.</p>
+      <div class="opts">
+        <label><input type="checkbox" id="optArt" checked> Illustrations</label>
+        <label><input type="checkbox" id="optTables" checked> Table catalogue</label>
+        <label><input type="checkbox" id="optSnips" checked> Recipes</label>
+        <label class="dens">Density
+          <select id="optDens">
+            <option value="tight">Tight — 5 columns</option>
+            <option value="normal" selected>Normal — 4 columns</option>
+            <option value="loose">Loose — 3 columns</option>
+          </select>
+        </label>
+        <button class="btn" id="printBtn" type="button">Print / Save PDF</button>
+      </div>
+      <p class="tip" id="printTip" hidden></p>
+    </div>
+    <div id="sheet" class="sheet"></div>
+  </section>
+
+</main>
+
+<footer class="foot no-print">
+  <div class="wrap">
+    <p>Definitions follow the <a id="dbLink" href="https://allenswdb.github.io/anatomy/microns-em/em-background.html">SWDB databook</a>. Corrections and additions are welcome — everything on this page comes from the four files in <code>data/</code>.</p>
+    <p class="rev" id="rev"></p>
+  </div>
+</footer>
+
+<script src="data/config.js"></script>
+<script src="data/terms.js"></script>
+<script src="data/tables.js"></script>
+<script src="data/snippets.js"></script>
+<script src="data/diagrams.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet builder — Allen Connectomics Glossary</title>
+<meta name="description" content="Pick terms, edit them, and place them by hand on printed pages.">
+<link rel="stylesheet" href="assets/builder.css">
+</head>
+<body>
+
+<div class="chrome">
+  <div class="chrome-in">
+    <h1><span class="em">Cheat sheet</span> builder</h1>
+    <div class="steps">
+      <button class="step active" data-step="0" id="st0"><span class="n">1</span>Select</button>
+      <button class="step" data-step="1" id="st1"><span class="n">2</span>Edit</button>
+      <button class="step" data-step="2" id="st2"><span class="n">3</span>Arrange &amp; print</button>
+    </div>
+    <div class="spacer"></div>
+    <a class="btn ghost sm" href="index.html">← Glossary</a>
+    <button class="btn ghost sm" id="resetBtn" title="Clear all selections and edits">Reset</button>
+    <button class="btn primary" id="nextBtn">Next: Edit →</button>
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<section class="view" id="view0">
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search terms…" aria-label="Search terms">
+    <div class="catfilters" id="catfilters"></div>
+    <span class="spacer" style="flex:1"></span>
+    <button class="btn sm" id="selAll">Select all shown</button>
+    <button class="btn sm" id="selNone">Clear</button>
+    <span class="count" id="selCount">0 selected</span>
+  </div>
+  <div class="selgrid" id="selgrid"></div>
+</section>
+
+<!-- STEP 2 -->
+<section class="view" id="view1" hidden>
+  <div class="toolbar">
+    <span class="count" id="editCount">0 boxes</span>
+    <span style="color:var(--muted);font-size:.78rem">Edit the name and definition of each box; reorder with ↑↓; toggle its diagram. Changes autosave.</span>
+  </div>
+  <div class="editlist" id="editlist"></div>
+</section>
+
+<!-- STEP 3 -->
+<section class="view" id="view2" hidden>
+  <div class="arrbar">
+    <button class="btn sm" id="autoAll">Auto-arrange</button>
+    <button class="btn sm" id="autoFit">Auto-fit</button>
+    <div class="sep"></div>
+    <span class="margctl">Pages
+      <button class="btn sm" id="delPage" title="Remove the last page">−</button>
+      <span id="pageCount" style="font-family:var(--font-mono);min-width:4rem">2 pages</span>
+      <button class="btn sm" id="addPage" title="Add a page">+</button>
+    </span>
+    <div class="sep"></div>
+    <label class="margctl">Side <input type="range" id="hMargin" min="0.10" max="1.0" step="0.05" value="0.40"> <span id="hMarginVal" style="font-family:var(--font-mono);min-width:2.8rem">0.40″</span></label>
+    <label class="margctl">Top/btm <input type="range" id="vMargin" min="0.10" max="1.0" step="0.05" value="0.40"> <span id="vMarginVal" style="font-family:var(--font-mono);min-width:2.8rem">0.40″</span></label>
+    <div class="sep"></div>
+    <div class="selbox-tools" id="selTools" style="visibility:hidden">
+      <span id="selName">—</span>
+      <label>scale <input type="range" id="scaleRange" min="0.4" max="2" step="0.05" value="1"></label>
+      <span id="scaleVal" style="font-family:var(--font-mono)">1.00×</span>
+      <select id="toPage" aria-label="Move to page"></select>
+      <button class="btn sm" id="toFront">Front</button>
+    </div>
+    <span class="spacer" style="flex:1"></span>
+    <span class="fitmsg" id="fitMsg"></span>
+    <div class="sep"></div>
+    <button class="btn primary sm" id="printBtn">Print / Save PDF</button>
+  </div>
+  <div class="pages" id="pages"></div>
+</section>
+
+<script src="data/config.js"></script>
+<script src="data/terms.js"></script>
+<script src="data/tables.js"></script>
+<script src="data/snippets.js"></script>
+<script src="data/diagrams.js"></script>
+<script src="assets/builder.js"></script>
+</body>
+</html>
