@@ -13,7 +13,11 @@ dependencies — double-clicking the file works, and so does GitHub Pages.
 | `builder.html` | Cheat sheet builder — place blocks on pages by hand |
 | `data/` | **Everything you would want to edit lives here** |
 | `assets/` | Styling and behaviour |
-| `scripts/` | One-off importers used to seed `data/`; not part of the site |
+| `dist/` | The same site squashed into one self-contained file, for emailing |
+| `scripts/` | Importers and the bundler; not part of the site |
+
+To refresh `dist/` after editing `data/`: `node scripts/bundle.mjs` (and
+`node scripts/bundle.mjs builder.html`). Nothing else needs Node.
 
 ## The three views
 
