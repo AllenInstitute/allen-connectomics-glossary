@@ -411,21 +411,33 @@ window.TERMS = [
 // one catalogue per dataset. Descriptions and counts follow the databook's
 // "CAVE Annotation Tables" page.
 //
-// Groups say what a table records. They are not a pipeline and carry no
-// ordering — a table is not "downstream" of the group above it.
+// Groups say what a table records, and each has its own colour so the whole
+// catalogue reads at a glance. They carry no ordering: a table is not
+// "downstream" of the column to its left.
 //
 // To add a Neuroglancer state for a table, put the URL in its `ng` field.
 
 window.TABLE_GROUPS = [
-  { id: "detection",      label: "Detection",      blurb: "Automated detections: where things are." },
-  { id: "classification", label: "Classification", blurb: "Labels applied to detected cells." },
-  { id: "proofreading",   label: "Proofreading",   blurb: "Which arbors have been manually corrected, and how far." },
-  { id: "coregistration", label: "Coregistration", blurb: "Links between functionally imaged units and EM cells." },
-  { id: "functional",     label: "Functional properties", blurb: "Response properties attached to coregistered cells." },
+  { id: "raw",            label: "Raw",            color: "#6f7a8b", blurb: "The measurements everything else describes. Not queryable as tables." },
+  { id: "detection",      label: "Detection",      color: "#0d94a1", blurb: "Automated detections: where things are." },
+  { id: "classification", label: "Classification", color: "#6d55e0", blurb: "Labels applied to detected cells." },
+  { id: "proofreading",   label: "Proofreading",   color: "#c67f16", blurb: "Which arbors have been manually corrected, and how far." },
+  { id: "coregistration", label: "Coregistration", color: "#cc3f92", blurb: "Links between functionally imaged units and EM cells." },
+  { id: "functional",     label: "Functional",     color: "#2a9257", blurb: "Response properties attached to coregistered cells." },
+  { id: "analysis",       label: "Analysis",       color: "#d9542f", blurb: "What you assemble yourself from the tables on the left." },
 ];
 
 window.TABLES = {
   microns: [
+    { name: "EM imagery", group: "raw", rows: "—", derived: true,
+      desc: "Serial-section TEM greyscale volume.",
+      keys: ["4 × 4 × 40 nm"], ng: "" },
+    { name: "EM segmentation", group: "raw", rows: "—", derived: true,
+      desc: "Dense segmentation; voxel → supervoxel → root_id.",
+      keys: ["pt_root_id"], ng: "" },
+    { name: "2p functional imaging", group: "raw", rows: "—", derived: true,
+      desc: "Calcium responses to natural movies and parametric stimuli.",
+      keys: ["session", "scan_idx", "unit_id"], ng: "" },
     { name: "synapses_pni_2", group: "detection", rows: "337,312,429",
       desc: "Every automatically detected synapse, with the segment ids of the pre- and postsynaptic side.",
       keys: ["pre_pt_root_id", "post_pt_root_id", "size", "ctr_pt_position"], ng: "" },
@@ -483,9 +495,21 @@ window.TABLES = {
     { name: "digital_twin_properties_bcm_coreg_auto_phase3_fwd_v2", group: "functional", rows: "—",
       desc: "The same properties for the automatically coregistered cells.",
       keys: ["OSI", "DSI", "pref_ori", "pref_dir", "cc_abs", "cc_max", "cc_norm"], ng: "" },
+    { name: "Typed connectivity matrix", group: "analysis", rows: "—", derived: true,
+      desc: "Synapses collapsed to pre → post pairs, gated on proofreading and joined to a cell-type table.",
+      keys: ["groupby(pre_type, post_type)"], ng: "" },
   ],
 
   v1dd: [
+    { name: "EM imagery", group: "raw", rows: "—", derived: true,
+      desc: "Serial-section TEM greyscale volume.",
+      keys: ["9 × 9 × 45 nm"], ng: "" },
+    { name: "EM segmentation", group: "raw", rows: "—", derived: true,
+      desc: "Dense segmentation; voxel → supervoxel → root_id.",
+      keys: ["pt_root_id"], ng: "" },
+    { name: "2p / 3p functional imaging", group: "raw", rows: "—", derived: true,
+      desc: "Calcium responses across all layers; coregistered for one mouse.",
+      keys: ["column", "volume", "plane", "roi"], ng: "" },
     { name: "synapses_v1dd", group: "detection", rows: "639,326,124",
       desc: "Every automatically detected synapse, with the segment ids of the pre- and postsynaptic side.",
       keys: ["pre_pt_root_id", "post_pt_root_id", "size", "ctr_pt_position"], ng: "" },
@@ -516,6 +540,9 @@ window.TABLES = {
     { name: "functional_coregistration_manual_2", group: "coregistration", rows: "571",
       desc: "Human-matched links between functional units and EM nuclei, for the one mouse with functional coregistration.",
       keys: ["column", "volume", "plane", "roi"], ng: "" },
+    { name: "Typed connectivity matrix", group: "analysis", rows: "—", derived: true,
+      desc: "Synapses collapsed to pre → post pairs, gated on proofreading and joined to a cell-type table.",
+      keys: ["groupby(pre_type, post_type)"], ng: "" },
   ],
 };
 

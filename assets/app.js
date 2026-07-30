@@ -18,9 +18,11 @@ const LANGS  = window.LANGUAGES;
 
 const STORE = "acg.v1";
 const S = Object.assign(
+  // `ds` scopes the table catalogue only. The glossary always shows every term
+  // and flags the few that belong to one dataset, which is what people asked for.
   { view: "glossary", ds: "all", sort: "alpha", q: "",
     theme: "auto", lang: "python",
-    art: true, tables: true, snips: true, dens: "normal" },
+    art: true, tables: true, snips: true, dens: "normal", sheetDs: "all" },
   readStore()
 );
 
@@ -41,9 +43,6 @@ function hl(html, q){
     part.startsWith("<") ? part : part.replace(rx, "<mark>$1</mark>")).join("");
 }
 
-const termDatasets = t => t.datasets && t.datasets.length ? t.datasets : ["microns", "v1dd"];
-const inDataset = (t, ds) => ds === "all" || termDatasets(t).includes(ds);
-
 function matches(t, q){
   if (!q) return true;
   const hay = (t.term + " " + strip(t.def) + " " + CAT[t.category].label + " " +
@@ -53,7 +52,7 @@ function matches(t, q){
 
 function visibleTerms(){
   const q = S.q.trim().toLowerCase();
-  return TERMS.filter(t => inDataset(t, S.ds) && matches(t, q));
+  return TERMS.filter(t => matches(t, q));
 }
 
 // crude but stable Python/R colouring: comments, strings, keywords
@@ -131,24 +130,29 @@ function tableRows(dsId){
     (t.name + " " + t.desc + " " + (t.keys || []).join(" ")).toLowerCase().includes(q));
 }
 
+/* One lane per group, colour-coded, laid out side by side. The lanes are a
+   classification, not a sequence — there are deliberately no arrows between
+   them and no claim that the left column comes before the right. */
 function datasetBlock(dsId){
   const d = DS[dsId];
   const rows = tableRows(dsId);
   const q = S.q.trim().toLowerCase();
-  const groups = GROUPS.map(g => {
+
+  const lanes = GROUPS.map(g => {
     const items = rows.filter(t => t.group === g.id);
-    if (!items.length) return "";
-    return `<section class="tgroup">
-      <h3>${esc(g.label)}</h3>
-      <p class="gb">${esc(g.blurb)}</p>
-      <div class="tlist">${items.map(t => `
-        <div class="trow" id="tbl-${esc(dsId)}-${esc(t.name)}" data-table="${esc(t.name)}">
-          <div class="tn"><code>${hl(esc(t.name), q)}</code><span class="rows">${esc(t.rows)}</span></div>
-          <p>${hl(esc(t.desc), q)}</p>
-          ${(t.keys || []).length ? `<div class="keys">${t.keys.map(k => `<span>${esc(k)}</span>`).join("")}</div>` : ""}
-          ${t.ng ? `<div class="keys"><a class="chip ng" href="${esc(t.ng)}" target="_blank" rel="noopener">Neuroglancer ↗</a></div>` : ""}
-        </div>`).join("")}</div>
-    </section>`;
+    return `<div class="lane${items.length ? "" : " dim"}">
+      <div class="lane-h" style="background:${g.color}">${esc(g.label)}</div>
+      <p class="lane-b" title="${esc(g.blurb)}">${esc(g.blurb)}</p>
+      ${items.map(t => `
+        <div class="node${t.derived ? " derived" : ""}" style="border-left-color:${g.color}"
+             id="tbl-${esc(dsId)}-${esc(t.name)}" data-table="${esc(t.name)}">
+          <div class="n-name">${hl(esc(t.name), q)}</div>
+          <div class="n-keys">${t.rows && t.rows !== "—"
+              ? `<b>${esc(t.rows)} rows</b>` : ""}${esc((t.keys || []).join(" · "))}</div>
+          <p class="n-desc">${hl(esc(t.desc), q)}</p>
+          ${t.ng ? `<a class="chip ng" href="${esc(t.ng)}" target="_blank" rel="noopener">Neuroglancer ↗</a>` : ""}
+        </div>`).join("")}
+    </div>`;
   }).join("");
 
   return `<section class="dsblock">
@@ -163,19 +167,22 @@ function datasetBlock(dsId){
       </div>
     </header>
     <p class="blurb">${esc(d.blurb)}</p>
-    ${groups || `<p class="empty">No tables match that search.</p>`}
+    ${rows.length ? `<div class="lanes">${lanes}</div>`
+                  : `<p class="empty">No tables match that search.</p>`}
   </section>`;
 }
 
 function renderTables(){
   const ids = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
   $("#tablesOut").innerHTML =
-    `<h2 class="sec-h">Tables worth querying</h2>
-     <p class="sec-p">Grouped by what each table records. The groups are a way to find things — they are not a
-     pipeline, and nothing here is downstream of anything else.</p>`
+    `<h2 class="sec-h">Tables at a glance</h2>
+     <p class="sec-p">Every column is a kind of thing a table records, not a stage in a pipeline —
+     nothing here is downstream of the column to its left. Greyed entries are the underlying
+     measurements and the products you build yourself; the rest are CAVE tables you can query.</p>`
     + ids.map(datasetBlock).join("");
   renderSnips();
-  $("#count").textContent = ids.map(i => `${tableRows(i).length} ${DS[i].label} tables`).join(" · ");
+  $("#count").textContent = ids
+    .map(i => `${tableRows(i).filter(t => !t.derived).length} ${DS[i].label} tables`).join(" · ");
 }
 
 function renderSnips(){
@@ -199,8 +206,8 @@ function renderSnips(){
 function renderSheet(){
   const list = [...visibleTerms()].sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
   const byCat = S.sort === "category";
-  const dsIds = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
-  const scope = S.ds === "all" ? "MICrONS & V1DD" : DS[S.ds].label;
+  const dsIds = S.sheetDs === "all" ? ["microns", "v1dd"] : [S.sheetDs];
+  const scope = S.sheetDs === "all" ? "MICrONS & V1DD" : DS[S.sheetDs].label;
 
   const glossBody = byCat
     ? CATS.map(c => {
@@ -211,15 +218,19 @@ function renderSheet(){
     : list.map(t => sheetTerm(t)).join("");
 
   const tablesBody = !S.tables ? "" :
-    `<h2 class="sh-s">Tables worth querying · grouped by what they record, not a pipeline</h2>` +
-    dsIds.map(id => `<div class="sh-tables">` + GROUPS.map(g => {
-      const items = TBL[id].filter(t => t.group === g.id);
-      if (!items.length) return "";
-      return `<div class="sh-tg"><h4>${esc(DS[id].label)} · ${esc(g.label)}</h4>` + items.map(t =>
-        `<div class="sh-t"><div class="n">${esc(t.name)}</div>
-         <div class="k">${esc((t.keys || []).slice(0, 4).join(" · "))}${t.rows && t.rows !== "—" ? " · " + esc(t.rows) : ""}</div></div>`
-      ).join("") + `</div>`;
-    }).join("") + `</div>`).join("");
+    `<h2 class="sh-s">Tables at a glance · columns are kinds of table, not stages</h2>` +
+    dsIds.map(id => `<div class="sh-ds">${esc(DS[id].label)}</div><div class="sh-lanes">` +
+      GROUPS.map(g => {
+        const items = TBL[id].filter(t => t.group === g.id);
+        if (!items.length) return "";
+        return `<div class="sh-lane"><div class="sh-lh" style="background:${g.color}">${esc(g.label)}</div>` +
+          items.map(t =>
+            `<div class="sh-t${t.derived ? " derived" : ""}" style="border-left-color:${g.color}">
+               <div class="n">${esc(t.name)}</div>
+               <div class="k">${esc((t.keys || []).slice(0, 4).join(" · "))}${
+                 t.rows && t.rows !== "—" ? " · " + esc(t.rows) : ""}</div></div>`).join("") +
+          `</div>`;
+      }).join("") + `</div>`).join("");
 
   const snipsBody = !S.snips ? "" :
     `<h2 class="sh-s">Recipes</h2><div class="sh-snips">` +
@@ -232,12 +243,13 @@ function renderSheet(){
       <h1>${esc(window.SITE.title)}</h1>
       <div class="sub"><b>${esc(scope)}</b><br>${esc(window.SITE.revision)}</div>
     </div>
-    <div class="sh-leg">${CATS.map(c => `<span><i style="background:${c.color}"></i>${esc(c.short)}</span>`).join("")}</div>
+    <div class="sh-leg"><b>Category</b>${CATS.map(c => `<span><i style="background:${c.color}"></i>${esc(c.short)}</span>`).join("")}</div>
+    ${S.tables ? `<div class="sh-leg"><b>Table records</b>${GROUPS.map(g => `<span><i style="background:${g.color}"></i>${esc(g.label)}</span>`).join("")}</div>` : ""}
     <h2 class="sh-s">Glossary · ${list.length} terms · ${byCat ? "grouped by category" : "A to Z"}${S.q ? " · matching “" + esc(S.q) + "”" : ""}</h2>
     <div class="sh-gloss ${esc(S.dens)}">${glossBody}</div>
     ${tablesBody}
     ${snipsBody}
-    <div class="sh-foot">Colour on a card edge = category. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse). ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
+    <div class="sh-foot">Colour on a glossary card = its category. Colour in the table overview = what that table records. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse). ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
 }
 
 function sheetTerm(t){
@@ -294,7 +306,9 @@ function writeHash(){
 function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
   $$(".view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
-  $("#sortCtl").hidden = S.view === "tables";   // sorting has no meaning there
+  // each control appears only where it does something
+  $("#sortCtl").hidden = S.view === "tables";
+  $("#dsCtl").hidden   = S.view !== "tables";
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
@@ -320,6 +334,7 @@ function init(){
   $$(".sb").forEach(b  => b.setAttribute("aria-pressed", String(b.dataset.sort === S.sort)));
   $("#optArt").checked = S.art; $("#optTables").checked = S.tables; $("#optSnips").checked = S.snips;
   $("#optDens").value = S.dens;
+  $("#optSheetDs").value = S.sheetDs;
   applyTheme();
 
   const target = readHash();
@@ -345,6 +360,7 @@ function init(){
     $("#opt" + k[0].toUpperCase() + k.slice(1)).onchange = e => { S[k] = e.target.checked; save(); renderSheet(); };
   });
   $("#optDens").onchange = e => { S.dens = e.target.value; save(); renderSheet(); };
+  $("#optSheetDs").onchange = e => { S.sheetDs = e.target.value; save(); renderSheet(); };
   $("#printBtn").onclick = doPrint;
 
   // language tabs on the recipe blocks

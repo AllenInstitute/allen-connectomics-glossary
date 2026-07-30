@@ -53,9 +53,14 @@ Dataset-wide viewer links live in `data/config.js` under each dataset's `ng`.
 
 ### Add, remove or re-describe a table
 `data/tables.js`. Tables are listed per dataset under `window.TABLES`, each with a
-`group` from `window.TABLE_GROUPS`. Groups describe **what a table records** — they are
-not stages and imply no ordering, so please do not add one that reads as a pipeline
-step. Row counts are copy-and-paste from the databook's *CAVE Annotation Tables* page.
+`group` from `window.TABLE_GROUPS`. Groups describe **what a table records** and each
+becomes one colour-coded column in the overview. They imply no ordering, so please do
+not add one that reads as a pipeline step. Row counts are copy-and-paste from the
+databook's *CAVE Annotation Tables* page.
+
+Set `"derived": true` on an entry that is not a queryable CAVE table — the raw
+measurements and the things you assemble yourself. It renders greyed and dashed, and is
+left out of the table count.
 
 ### Add an R version of a recipe
 `data/snippets.js`. Each snippet already has a `python` key; add an `r` key next to it:
@@ -69,10 +74,12 @@ step. Row counts are copy-and-paste from the databook's *CAVE Annotation Tables*
 The R tab on that block stops being greyed out. Nothing else needs to change. To add a
 third language, add it to `window.LANGUAGES` too.
 
-### Change a category or its colour
-`data/config.js`, `window.CATEGORIES`. Pick a hue distinguishable from the other eleven
-**and** from the four anatomy colours in `window.ANATOMY` — the site's one colour rule is
-that category hues never appear inside an illustration and vice versa. See the README.
+### Change a category or a colour
+Glossary categories live in `data/config.js` under `window.CATEGORIES`; table-group
+colours live in `data/tables.js` under `window.TABLE_GROUPS`. Pick a hue distinguishable
+from the others in its own palette **and** from the four anatomy colours in
+`window.ANATOMY`. The site's colour rule — one palette, one meaning, one place — is
+spelled out in the README; please keep it true.
 
 ### Change or add an illustration
 `data/diagrams.js` maps a term `id` to an inline SVG string. They are hand-drawn on a

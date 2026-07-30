@@ -9,12 +9,14 @@
 /* ==========================================================================
    Allen Connectomics Glossary
 
-   Colour discipline — three roles, one meaning each:
-     1. category hue   -> the rule on a glossary card's left edge, and its eyebrow
-     2. anatomy hue    -> inside illustrations only (structure / dendrite / axon / synapse)
-     3. accent         -> interactive chrome (links, active tabs, focus)
-   Nothing else is coloured. Table groups and datasets are distinguished by
-   position and type, not hue, so no palette does double duty.
+   Colour discipline — each palette has one meaning and one place it appears:
+     1. category hue   -> glossary cards only: the left rule and the eyebrow
+     2. table-group hue-> the table overview only: lane headers and node rules
+     3. anatomy hue    -> inside illustrations only (structure / dendrite / axon / synapse)
+     4. accent         -> interactive chrome (links, active tabs, focus)
+   Each carries a legend where it is used, and the two content palettes never
+   share a surface: the glossary and the table overview are separate views, and
+   on the printed sheet both legends are shown. Datasets are not colour-coded.
    ========================================================================== */
 
 :root{
@@ -76,6 +78,8 @@
 }
 
 *{box-sizing:border-box}
+/* several controls are display:flex, which otherwise wins over the UA's [hidden] */
+[hidden]{display:none !important}
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0; background:var(--paper); color:var(--ink);
@@ -94,7 +98,8 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* ── top bar ─────────────────────────────────────────────────── */
 .topbar{position:sticky; top:0; z-index:30; background:color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter:saturate(140%) blur(10px); border-bottom:1px solid var(--line)}
-.topbar-in{display:flex; align-items:center; gap:1.25rem; padding-top:.7rem; padding-bottom:.6rem}
+.topbar-in{display:flex; align-items:center; gap:1.25rem; padding-top:.7rem; padding-bottom:.5rem}
+.topbar-in .theme{margin-left:auto}
 .brand{display:flex; align-items:center; gap:.55rem; min-width:0}
 .mark{width:15px; height:15px; flex:none; border-radius:3px;
   background:
@@ -107,9 +112,11 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .brand-t i{font-style:normal; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em;
   text-transform:uppercase; color:var(--faint)}
 
-.views{display:flex; gap:.15rem; margin-left:auto}
+/* the view switcher sits in the control bar, ahead of the controls it governs */
+.views{display:flex; gap:.15rem; padding-right:.85rem; margin-right:.15rem;
+  border-right:1px solid var(--line)}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
-  padding:.4rem .75rem; border-radius:99px; cursor:pointer}
+  padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap}
 .view:hover{color:var(--ink); background:var(--panel)}
 .view[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:600}
 
@@ -208,20 +215,30 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 .dsblock > header .facts b{color:var(--ink); font-weight:600}
 .dsblock > p.blurb{margin:.5rem 0 1rem; color:var(--muted); font-size:.84rem; max-width:70ch}
 
-.tgroup{margin-bottom:1.3rem; break-inside:avoid}
-.tgroup h3{margin:0 0 .1rem; font-size:.72rem; font-family:var(--mono); letter-spacing:.11em;
-  text-transform:uppercase; color:var(--ink)}
-.tgroup .gb{margin:0 0 .55rem; font-size:.75rem; color:var(--faint)}
-.tlist{display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px}
-.trow{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:.5rem .65rem}
-.trow .tn{display:flex; align-items:baseline; gap:.5rem}
-.trow .tn code{font-size:.76rem; background:none; padding:0; font-weight:600; color:var(--ink)}
-.trow .tn .rows{margin-left:auto; font-family:var(--mono); font-size:.62rem; color:var(--faint);
-  font-variant-numeric:tabular-nums; white-space:nowrap}
-.trow p{margin:.22rem 0 0; font-size:.78rem; color:var(--muted); line-height:1.35}
-.trow .keys{margin-top:.35rem; display:flex; flex-wrap:wrap; gap:.2rem}
-.trow .keys span{font-family:var(--mono); font-size:.6rem; color:var(--muted);
-  background:var(--panel); border-radius:4px; padding:.05rem .3rem}
+/* Lanes: one column per kind of table. Side by side because it reads well as an
+   overview, NOT because it is a sequence — hence no connectors of any sort. */
+.lanes{display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:8px; align-items:start}
+.lane{display:flex; flex-direction:column; gap:6px; min-width:0}
+.lane.dim{opacity:.4}
+.lane-h{font-family:var(--mono); font-size:.6rem; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:#fff; padding:.2rem .45rem; border-radius:5px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.lane-b{margin:-2px 0 0; font-size:.66rem; line-height:1.3; color:var(--faint);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+.node{background:var(--card); border:1px solid var(--line); border-left:3px solid var(--line-2);
+  border-radius:6px; padding:.35rem .45rem; min-width:0}
+.node.derived{background:transparent; border-style:dashed}
+.node .n-name{font-family:var(--mono); font-size:.68rem; font-weight:700; line-height:1.2;
+  word-break:break-word; color:var(--ink)}
+.node .n-keys{font-family:var(--mono); font-size:.56rem; color:var(--faint); line-height:1.3;
+  word-break:break-word; margin-top:2px}
+.node .n-keys b{font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums;
+  display:block}
+.node .n-desc{margin:.2rem 0 0; font-size:.68rem; line-height:1.32; color:var(--muted)}
+.node .chip.ng{margin-top:.25rem}
+.node:target{outline:2px solid var(--accent); outline-offset:3px}
+
+@media (max-width:1100px){ .lanes{grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))} }
 
 .snips{margin-top:2rem}
 .snip{margin-bottom:1rem; border:1px solid var(--line); border-radius:var(--r); overflow:hidden;
@@ -269,7 +286,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 .sheet .sh-head .sub{margin-left:auto; text-align:right; font-family:var(--mono); font-size:6.5pt;
   text-transform:uppercase; letter-spacing:.09em; color:#5b6572; line-height:1.35}
 .sheet .sh-head .sub b{color:#14181d}
-.sheet .sh-leg{display:flex; flex-wrap:wrap; gap:2px 7px; margin-bottom:8px}
+.sheet .sh-leg{display:flex; flex-wrap:wrap; align-items:center; gap:2px 7px; margin-bottom:4px}
 .sheet .sh-leg span{display:inline-flex; align-items:center; gap:3px; font-size:5.6pt; color:#5b6572;
   font-family:var(--mono); letter-spacing:.03em}
 .sheet .sh-leg i{width:7px; height:7px; border-radius:2px}
@@ -291,13 +308,20 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 .sheet .sh-cat{break-inside:avoid; break-after:avoid; page-break-after:avoid;
   font-size:6.4pt; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
   border-bottom:1.2px solid currentColor; padding-bottom:1px; margin:0 0 4px}
-.sheet .sh-tables{columns:2 2.8in; column-gap:10px}
-.sheet .sh-tg{break-inside:avoid; page-break-inside:avoid; margin-bottom:6px; display:inline-block; width:100%}
-.sheet .sh-tg h4{margin:0 0 2px; font-family:var(--mono); font-size:5.4pt; letter-spacing:.1em;
-  text-transform:uppercase; color:#14181d}
-.sheet .sh-t{border-left:2px solid #c9c6bf; padding:0 0 0 4px; margin-bottom:2.5px}
-.sheet .sh-t .n{font-family:var(--mono); font-size:5.4pt; font-weight:700; word-break:break-all}
-.sheet .sh-t .k{font-family:var(--mono); font-size:4.6pt; color:#8d95a1; word-break:break-word}
+.sheet .sh-ds{font-size:7.5pt; font-weight:800; letter-spacing:-.01em; margin:5px 0 3px;
+  break-after:avoid; page-break-after:avoid}
+.sheet .sh-lanes{display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:4px;
+  align-items:start; break-inside:avoid; page-break-inside:avoid; margin-bottom:6px}
+.sheet .sh-lane{display:flex; flex-direction:column; gap:2px; min-width:0}
+.sheet .sh-lh{font-family:var(--mono); font-size:5pt; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; padding:1.5px 3px; border-radius:3px;
+  white-space:nowrap; overflow:hidden}
+.sheet .sh-t{border-left:2px solid #c9c6bf; padding:0 0 0 3px}
+.sheet .sh-t.derived .n{font-weight:600; color:#5b6572}
+.sheet .sh-t .n{font-family:var(--mono); font-size:5pt; font-weight:700; line-height:1.15; word-break:break-word}
+.sheet .sh-t .k{font-family:var(--mono); font-size:4.2pt; color:#8d95a1; line-height:1.15; word-break:break-word}
+.sheet .sh-leg b{font-family:var(--mono); font-size:5.2pt; text-transform:uppercase;
+  letter-spacing:.08em; color:#14181d; margin-right:2px}
 .sheet .sh-snips{columns:2 3in; column-gap:10px}
 .sheet pre.sh-p{break-inside:avoid; page-break-inside:avoid; margin:0 0 6px; background:#12161c;
   color:#dbe4ee; border-radius:6px; padding:6px 8px; font-family:var(--mono); font-size:5.6pt;
@@ -315,8 +339,9 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 
 @media (max-width:720px){
   .topbar-in{flex-wrap:wrap}
-  .views{margin-left:0; order:3; width:100%}
+  .views{border-right:0; padding-right:0; width:100%}
   .grid{columns:1}
+  .lanes{grid-template-columns:1fr}
   .sheet{padding:16px}
 }
 
@@ -348,19 +373,19 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <span class="brand-t"><b id="siteTitle">Allen Connectomics Glossary</b><i id="siteSub">MICrONS &amp; V1DD</i></span>
     </div>
 
-    <nav class="views" aria-label="Views">
-      <button class="view" data-view="glossary" aria-current="page">Glossary</button>
-      <button class="view" data-view="tables">Tables</button>
-      <button class="view" data-view="sheet">Cheat sheet</button>
-    </nav>
-
     <button class="theme" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">
       <span aria-hidden="true">◐</span>
     </button>
   </div>
 
   <div class="wrap ctrlbar">
-    <div class="ds" role="group" aria-label="Dataset">
+    <nav class="views" aria-label="Views">
+      <button class="view" data-view="glossary" aria-current="page">Glossary</button>
+      <button class="view" data-view="tables">Tables</button>
+      <button class="view" data-view="sheet">Cheat sheet</button>
+    </nav>
+
+    <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden>
       <button class="dsb" data-ds="all" aria-pressed="true">Both datasets</button>
       <button class="dsb" data-ds="microns" aria-pressed="false">MICrONS</button>
       <button class="dsb" data-ds="v1dd" aria-pressed="false">V1DD</button>
@@ -417,6 +442,13 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
         <label><input type="checkbox" id="optArt" checked> Illustrations</label>
         <label><input type="checkbox" id="optTables" checked> Table catalogue</label>
         <label><input type="checkbox" id="optSnips" checked> Recipes</label>
+        <label class="dens">Tables for
+          <select id="optSheetDs">
+            <option value="all" selected>both datasets</option>
+            <option value="microns">MICrONS</option>
+            <option value="v1dd">V1DD</option>
+          </select>
+        </label>
         <label class="dens">Density
           <select id="optDens">
             <option value="tight">Tight — 5 columns</option>
@@ -632,21 +664,33 @@ window.TERMS = [
 // one catalogue per dataset. Descriptions and counts follow the databook's
 // "CAVE Annotation Tables" page.
 //
-// Groups say what a table records. They are not a pipeline and carry no
-// ordering — a table is not "downstream" of the group above it.
+// Groups say what a table records, and each has its own colour so the whole
+// catalogue reads at a glance. They carry no ordering: a table is not
+// "downstream" of the column to its left.
 //
 // To add a Neuroglancer state for a table, put the URL in its `ng` field.
 
 window.TABLE_GROUPS = [
-  { id: "detection",      label: "Detection",      blurb: "Automated detections: where things are." },
-  { id: "classification", label: "Classification", blurb: "Labels applied to detected cells." },
-  { id: "proofreading",   label: "Proofreading",   blurb: "Which arbors have been manually corrected, and how far." },
-  { id: "coregistration", label: "Coregistration", blurb: "Links between functionally imaged units and EM cells." },
-  { id: "functional",     label: "Functional properties", blurb: "Response properties attached to coregistered cells." },
+  { id: "raw",            label: "Raw",            color: "#6f7a8b", blurb: "The measurements everything else describes. Not queryable as tables." },
+  { id: "detection",      label: "Detection",      color: "#0d94a1", blurb: "Automated detections: where things are." },
+  { id: "classification", label: "Classification", color: "#6d55e0", blurb: "Labels applied to detected cells." },
+  { id: "proofreading",   label: "Proofreading",   color: "#c67f16", blurb: "Which arbors have been manually corrected, and how far." },
+  { id: "coregistration", label: "Coregistration", color: "#cc3f92", blurb: "Links between functionally imaged units and EM cells." },
+  { id: "functional",     label: "Functional",     color: "#2a9257", blurb: "Response properties attached to coregistered cells." },
+  { id: "analysis",       label: "Analysis",       color: "#d9542f", blurb: "What you assemble yourself from the tables on the left." },
 ];
 
 window.TABLES = {
   microns: [
+    { name: "EM imagery", group: "raw", rows: "—", derived: true,
+      desc: "Serial-section TEM greyscale volume.",
+      keys: ["4 × 4 × 40 nm"], ng: "" },
+    { name: "EM segmentation", group: "raw", rows: "—", derived: true,
+      desc: "Dense segmentation; voxel → supervoxel → root_id.",
+      keys: ["pt_root_id"], ng: "" },
+    { name: "2p functional imaging", group: "raw", rows: "—", derived: true,
+      desc: "Calcium responses to natural movies and parametric stimuli.",
+      keys: ["session", "scan_idx", "unit_id"], ng: "" },
     { name: "synapses_pni_2", group: "detection", rows: "337,312,429",
       desc: "Every automatically detected synapse, with the segment ids of the pre- and postsynaptic side.",
       keys: ["pre_pt_root_id", "post_pt_root_id", "size", "ctr_pt_position"], ng: "" },
@@ -704,9 +748,21 @@ window.TABLES = {
     { name: "digital_twin_properties_bcm_coreg_auto_phase3_fwd_v2", group: "functional", rows: "—",
       desc: "The same properties for the automatically coregistered cells.",
       keys: ["OSI", "DSI", "pref_ori", "pref_dir", "cc_abs", "cc_max", "cc_norm"], ng: "" },
+    { name: "Typed connectivity matrix", group: "analysis", rows: "—", derived: true,
+      desc: "Synapses collapsed to pre → post pairs, gated on proofreading and joined to a cell-type table.",
+      keys: ["groupby(pre_type, post_type)"], ng: "" },
   ],
 
   v1dd: [
+    { name: "EM imagery", group: "raw", rows: "—", derived: true,
+      desc: "Serial-section TEM greyscale volume.",
+      keys: ["9 × 9 × 45 nm"], ng: "" },
+    { name: "EM segmentation", group: "raw", rows: "—", derived: true,
+      desc: "Dense segmentation; voxel → supervoxel → root_id.",
+      keys: ["pt_root_id"], ng: "" },
+    { name: "2p / 3p functional imaging", group: "raw", rows: "—", derived: true,
+      desc: "Calcium responses across all layers; coregistered for one mouse.",
+      keys: ["column", "volume", "plane", "roi"], ng: "" },
     { name: "synapses_v1dd", group: "detection", rows: "639,326,124",
       desc: "Every automatically detected synapse, with the segment ids of the pre- and postsynaptic side.",
       keys: ["pre_pt_root_id", "post_pt_root_id", "size", "ctr_pt_position"], ng: "" },
@@ -737,6 +793,9 @@ window.TABLES = {
     { name: "functional_coregistration_manual_2", group: "coregistration", rows: "571",
       desc: "Human-matched links between functional units and EM nuclei, for the one mouse with functional coregistration.",
       keys: ["column", "volume", "plane", "roi"], ng: "" },
+    { name: "Typed connectivity matrix", group: "analysis", rows: "—", derived: true,
+      desc: "Synapses collapsed to pre → post pairs, gated on proofreading and joined to a cell-type table.",
+      keys: ["groupby(pre_type, post_type)"], ng: "" },
   ],
 };
 
@@ -919,9 +978,11 @@ const LANGS  = window.LANGUAGES;
 
 const STORE = "acg.v1";
 const S = Object.assign(
+  // `ds` scopes the table catalogue only. The glossary always shows every term
+  // and flags the few that belong to one dataset, which is what people asked for.
   { view: "glossary", ds: "all", sort: "alpha", q: "",
     theme: "auto", lang: "python",
-    art: true, tables: true, snips: true, dens: "normal" },
+    art: true, tables: true, snips: true, dens: "normal", sheetDs: "all" },
   readStore()
 );
 
@@ -942,9 +1003,6 @@ function hl(html, q){
     part.startsWith("<") ? part : part.replace(rx, "<mark>$1</mark>")).join("");
 }
 
-const termDatasets = t => t.datasets && t.datasets.length ? t.datasets : ["microns", "v1dd"];
-const inDataset = (t, ds) => ds === "all" || termDatasets(t).includes(ds);
-
 function matches(t, q){
   if (!q) return true;
   const hay = (t.term + " " + strip(t.def) + " " + CAT[t.category].label + " " +
@@ -954,7 +1012,7 @@ function matches(t, q){
 
 function visibleTerms(){
   const q = S.q.trim().toLowerCase();
-  return TERMS.filter(t => inDataset(t, S.ds) && matches(t, q));
+  return TERMS.filter(t => matches(t, q));
 }
 
 // crude but stable Python/R colouring: comments, strings, keywords
@@ -1032,24 +1090,29 @@ function tableRows(dsId){
     (t.name + " " + t.desc + " " + (t.keys || []).join(" ")).toLowerCase().includes(q));
 }
 
+/* One lane per group, colour-coded, laid out side by side. The lanes are a
+   classification, not a sequence — there are deliberately no arrows between
+   them and no claim that the left column comes before the right. */
 function datasetBlock(dsId){
   const d = DS[dsId];
   const rows = tableRows(dsId);
   const q = S.q.trim().toLowerCase();
-  const groups = GROUPS.map(g => {
+
+  const lanes = GROUPS.map(g => {
     const items = rows.filter(t => t.group === g.id);
-    if (!items.length) return "";
-    return `<section class="tgroup">
-      <h3>${esc(g.label)}</h3>
-      <p class="gb">${esc(g.blurb)}</p>
-      <div class="tlist">${items.map(t => `
-        <div class="trow" id="tbl-${esc(dsId)}-${esc(t.name)}" data-table="${esc(t.name)}">
-          <div class="tn"><code>${hl(esc(t.name), q)}</code><span class="rows">${esc(t.rows)}</span></div>
-          <p>${hl(esc(t.desc), q)}</p>
-          ${(t.keys || []).length ? `<div class="keys">${t.keys.map(k => `<span>${esc(k)}</span>`).join("")}</div>` : ""}
-          ${t.ng ? `<div class="keys"><a class="chip ng" href="${esc(t.ng)}" target="_blank" rel="noopener">Neuroglancer ↗</a></div>` : ""}
-        </div>`).join("")}</div>
-    </section>`;
+    return `<div class="lane${items.length ? "" : " dim"}">
+      <div class="lane-h" style="background:${g.color}">${esc(g.label)}</div>
+      <p class="lane-b" title="${esc(g.blurb)}">${esc(g.blurb)}</p>
+      ${items.map(t => `
+        <div class="node${t.derived ? " derived" : ""}" style="border-left-color:${g.color}"
+             id="tbl-${esc(dsId)}-${esc(t.name)}" data-table="${esc(t.name)}">
+          <div class="n-name">${hl(esc(t.name), q)}</div>
+          <div class="n-keys">${t.rows && t.rows !== "—"
+              ? `<b>${esc(t.rows)} rows</b>` : ""}${esc((t.keys || []).join(" · "))}</div>
+          <p class="n-desc">${hl(esc(t.desc), q)}</p>
+          ${t.ng ? `<a class="chip ng" href="${esc(t.ng)}" target="_blank" rel="noopener">Neuroglancer ↗</a>` : ""}
+        </div>`).join("")}
+    </div>`;
   }).join("");
 
   return `<section class="dsblock">
@@ -1064,19 +1127,22 @@ function datasetBlock(dsId){
       </div>
     </header>
     <p class="blurb">${esc(d.blurb)}</p>
-    ${groups || `<p class="empty">No tables match that search.</p>`}
+    ${rows.length ? `<div class="lanes">${lanes}</div>`
+                  : `<p class="empty">No tables match that search.</p>`}
   </section>`;
 }
 
 function renderTables(){
   const ids = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
   $("#tablesOut").innerHTML =
-    `<h2 class="sec-h">Tables worth querying</h2>
-     <p class="sec-p">Grouped by what each table records. The groups are a way to find things — they are not a
-     pipeline, and nothing here is downstream of anything else.</p>`
+    `<h2 class="sec-h">Tables at a glance</h2>
+     <p class="sec-p">Every column is a kind of thing a table records, not a stage in a pipeline —
+     nothing here is downstream of the column to its left. Greyed entries are the underlying
+     measurements and the products you build yourself; the rest are CAVE tables you can query.</p>`
     + ids.map(datasetBlock).join("");
   renderSnips();
-  $("#count").textContent = ids.map(i => `${tableRows(i).length} ${DS[i].label} tables`).join(" · ");
+  $("#count").textContent = ids
+    .map(i => `${tableRows(i).filter(t => !t.derived).length} ${DS[i].label} tables`).join(" · ");
 }
 
 function renderSnips(){
@@ -1100,8 +1166,8 @@ function renderSnips(){
 function renderSheet(){
   const list = [...visibleTerms()].sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
   const byCat = S.sort === "category";
-  const dsIds = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
-  const scope = S.ds === "all" ? "MICrONS & V1DD" : DS[S.ds].label;
+  const dsIds = S.sheetDs === "all" ? ["microns", "v1dd"] : [S.sheetDs];
+  const scope = S.sheetDs === "all" ? "MICrONS & V1DD" : DS[S.sheetDs].label;
 
   const glossBody = byCat
     ? CATS.map(c => {
@@ -1112,15 +1178,19 @@ function renderSheet(){
     : list.map(t => sheetTerm(t)).join("");
 
   const tablesBody = !S.tables ? "" :
-    `<h2 class="sh-s">Tables worth querying · grouped by what they record, not a pipeline</h2>` +
-    dsIds.map(id => `<div class="sh-tables">` + GROUPS.map(g => {
-      const items = TBL[id].filter(t => t.group === g.id);
-      if (!items.length) return "";
-      return `<div class="sh-tg"><h4>${esc(DS[id].label)} · ${esc(g.label)}</h4>` + items.map(t =>
-        `<div class="sh-t"><div class="n">${esc(t.name)}</div>
-         <div class="k">${esc((t.keys || []).slice(0, 4).join(" · "))}${t.rows && t.rows !== "—" ? " · " + esc(t.rows) : ""}</div></div>`
-      ).join("") + `</div>`;
-    }).join("") + `</div>`).join("");
+    `<h2 class="sh-s">Tables at a glance · columns are kinds of table, not stages</h2>` +
+    dsIds.map(id => `<div class="sh-ds">${esc(DS[id].label)}</div><div class="sh-lanes">` +
+      GROUPS.map(g => {
+        const items = TBL[id].filter(t => t.group === g.id);
+        if (!items.length) return "";
+        return `<div class="sh-lane"><div class="sh-lh" style="background:${g.color}">${esc(g.label)}</div>` +
+          items.map(t =>
+            `<div class="sh-t${t.derived ? " derived" : ""}" style="border-left-color:${g.color}">
+               <div class="n">${esc(t.name)}</div>
+               <div class="k">${esc((t.keys || []).slice(0, 4).join(" · "))}${
+                 t.rows && t.rows !== "—" ? " · " + esc(t.rows) : ""}</div></div>`).join("") +
+          `</div>`;
+      }).join("") + `</div>`).join("");
 
   const snipsBody = !S.snips ? "" :
     `<h2 class="sh-s">Recipes</h2><div class="sh-snips">` +
@@ -1133,12 +1203,13 @@ function renderSheet(){
       <h1>${esc(window.SITE.title)}</h1>
       <div class="sub"><b>${esc(scope)}</b><br>${esc(window.SITE.revision)}</div>
     </div>
-    <div class="sh-leg">${CATS.map(c => `<span><i style="background:${c.color}"></i>${esc(c.short)}</span>`).join("")}</div>
+    <div class="sh-leg"><b>Category</b>${CATS.map(c => `<span><i style="background:${c.color}"></i>${esc(c.short)}</span>`).join("")}</div>
+    ${S.tables ? `<div class="sh-leg"><b>Table records</b>${GROUPS.map(g => `<span><i style="background:${g.color}"></i>${esc(g.label)}</span>`).join("")}</div>` : ""}
     <h2 class="sh-s">Glossary · ${list.length} terms · ${byCat ? "grouped by category" : "A to Z"}${S.q ? " · matching “" + esc(S.q) + "”" : ""}</h2>
     <div class="sh-gloss ${esc(S.dens)}">${glossBody}</div>
     ${tablesBody}
     ${snipsBody}
-    <div class="sh-foot">Colour on a card edge = category. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse). ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
+    <div class="sh-foot">Colour on a glossary card = its category. Colour in the table overview = what that table records. Colour inside a drawing = anatomy (structure · dendrite · axon · synapse). ${esc(window.SITE.title)} · ${esc(window.SITE.revision)}</div>`;
 }
 
 function sheetTerm(t){
@@ -1195,7 +1266,9 @@ function writeHash(){
 function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
   $$(".view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
-  $("#sortCtl").hidden = S.view === "tables";   // sorting has no meaning there
+  // each control appears only where it does something
+  $("#sortCtl").hidden = S.view === "tables";
+  $("#dsCtl").hidden   = S.view !== "tables";
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
@@ -1221,6 +1294,7 @@ function init(){
   $$(".sb").forEach(b  => b.setAttribute("aria-pressed", String(b.dataset.sort === S.sort)));
   $("#optArt").checked = S.art; $("#optTables").checked = S.tables; $("#optSnips").checked = S.snips;
   $("#optDens").value = S.dens;
+  $("#optSheetDs").value = S.sheetDs;
   applyTheme();
 
   const target = readHash();
@@ -1246,6 +1320,7 @@ function init(){
     $("#opt" + k[0].toUpperCase() + k.slice(1)).onchange = e => { S[k] = e.target.checked; save(); renderSheet(); };
   });
   $("#optDens").onchange = e => { S.dens = e.target.value; save(); renderSheet(); };
+  $("#optSheetDs").onchange = e => { S.sheetDs = e.target.value; save(); renderSheet(); };
   $("#printBtn").onclick = doPrint;
 
   // language tabs on the recipe blocks

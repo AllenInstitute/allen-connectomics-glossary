@@ -25,34 +25,42 @@ To refresh `dist/` after editing `data/`: `node scripts/bundle.mjs` (and
 Search matches names, definitions and category names. Every term has a permalink
 (`index.html#term-voxel`) you can paste into an email.
 
-**Tables** — the CAVE annotation tables we suggest people actually query, one catalogue
-per dataset, with row counts, key columns and one-line descriptions. Tables are grouped
-by *what they record*. The groups are a finding aid: nothing in them is upstream or
-downstream of anything else, and there are no arrows, because the real dependency
-structure is not a line.
+**Tables** — the CAVE annotation tables we suggest people actually query, one overview
+per dataset, with row counts, key columns and one-line descriptions. One colour-coded
+column per *kind of thing a table records*, side by side, so the whole catalogue reads
+at a glance. There are no arrows and nothing is claimed to be downstream of the column
+to its left — the columns are a classification, not a sequence. The greyed entries at
+each end are the underlying measurements and the products you assemble yourself; they
+are shown for context and are not queryable tables.
+
+The dataset control applies here.
 
 **Cheat sheet** — a printable sheet generated from whatever the dataset, search and sort
 controls are set to. It flows across as many US Letter pages as the content needs and
 never splits an entry across a page break. Print or save to PDF from the button, or just
 press ⌘P / Ctrl+P from any view.
 
-The dataset control (Both / MICrONS / V1DD) applies everywhere. Terms that only make
-sense for one dataset are labelled and filtered; the rest are shared.
+The dataset control (Both / MICrONS / V1DD) belongs to the Tables view, where choosing
+one is a real question. The glossary always shows every term and marks the handful that
+belong to one dataset with a chip. The cheat sheet has its own dataset selector, next to
+its other print options, for the table section it includes.
 
 ## Colour means one thing at a time
 
 This was a specific piece of feedback on the earlier draft, so it is worth stating as a
-rule the code follows:
+rule the code follows. Each palette has one meaning, one place it appears, and a legend
+where it appears:
 
-- **The colour on a glossary card's left edge and its eyebrow label = its category.**
-  That is the only place category hues appear.
-- **Colour inside an illustration = anatomy** — structure, dendrite, axon, synapse.
-  A separate, deliberately different family of hues. Both legends are on the page.
-- **Table groups and datasets are not colour-coded at all.** They are distinguished by
-  position and heading, so no palette does double duty.
+- **Glossary cards: colour = the term's category.** Left rule and eyebrow, nowhere else.
+- **Table overview: colour = what the table records.** Lane headers and node rules,
+  nowhere else. The lane headings are their own legend.
+- **Illustrations: colour = anatomy** — structure, dendrite, axon, synapse.
+- **Datasets are not colour-coded**, in any view.
 
-If you add a category, pick a hue that is distinguishable from the eleven others *and*
-from the four anatomy colours.
+The glossary and the table overview are separate views, so the first two palettes never
+share a surface. The printed sheet is the one place both appear, and it carries both
+legends. If you add a category or a table group, pick a hue distinguishable from its
+own palette *and* from the four anatomy colours.
 
 ## Making changes
 
