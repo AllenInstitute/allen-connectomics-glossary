@@ -2,9 +2,11 @@
 
 ### → [lappalainenj.github.io/allen-connectomics-glossary](https://lappalainenj.github.io/allen-connectomics-glossary/)
 
-A searchable glossary and table reference for the two EM connectomics datasets used in
-the course — **MICrONS** and **V1DD** — plus a printable cheat sheet built from the same
-content. Definitions follow the [SWDB databook](https://allenswdb.github.io/anatomy/microns-em/em-background.html).
+A searchable glossary and table reference for large-scale EM connectomics — currently
+covering **MICrONS** and **V1DD** — plus a printable cheat sheet built from the same
+content. Further reading is listed in the site footer and lives in `data/config.js`
+under `SITE.references`; a definition that leans on one particular source carries its
+own link chip.
 
 The live site above is the easiest way in. It is served by GitHub Pages from `main`, so
 anything merged is live within a minute or so. There is no build step, no server and no
@@ -25,7 +27,7 @@ To refresh `dist/` after editing `data/`: `node scripts/bundle.mjs` (and
 
 ## The three views
 
-**Glossary** — 116 terms, alphabetical by default, switchable to grouping by category.
+**Glossary** — 120 terms, alphabetical by default, switchable to grouping by category.
 Entries read left to right along each row. Search matches names, definitions and
 category names; the category legend doubles as a filter, and clicking pills narrows the
 glossary in either ordering. Every term has a permalink (`index.html#term-voxel`) you
@@ -35,7 +37,7 @@ The illustrations are generated rather than hand-drawn. They are under review, a
 errors cannot be ruled out at this stage — the site says so next to the legend and in
 the footer, and the note is repeated on the printed sheet.
 
-**Tables** — the CAVE annotation tables we suggest people actually query, one overview
+**Tables** — the CAVE annotation tables most analyses start from, one overview
 per dataset, with row counts, key columns and one-line descriptions. One colour-coded
 column per kind of thing a table records, side by side, so the whole catalogue reads at
 a glance, above a row of headline numbers for the dataset. The greyed entries at each
@@ -90,4 +92,4 @@ fixing a definition, adding a term, adding a Neuroglancer link, adding an R snip
 - **R alongside Python.** The recipe blocks are keyed by language and the R tab is
   already there, disabled. Adding an `r:` key to a snippet in `data/snippets.js` lights
   it up — no code change needed.
-- **Illustrations.** 81 of 116 terms have one.
+- **Illustrations.** 84 of 120 terms have one.

@@ -1,6 +1,6 @@
-// tables.js — the CAVE annotation tables we suggest people actually query,
-// one catalogue per dataset. Descriptions and counts follow the databook's
-// "CAVE Annotation Tables" page.
+// tables.js — the CAVE annotation tables most analyses start from, one
+// catalogue per dataset. Row counts are read off each dataset's published
+// table listing; see the references in data/config.js.
 //
 // Groups say what a table records, and each has its own colour so the whole
 // catalogue reads at a glance. They carry no ordering: a table is not
@@ -15,7 +15,7 @@ window.TABLE_GROUPS = [
   { id: "proofreading",   label: "Proofreading",   color: "#c67f16", blurb: "Which arbors have been manually corrected, and how far." },
   { id: "coregistration", label: "Coregistration", color: "#cc3f92", blurb: "Links between functionally imaged units and EM cells." },
   { id: "functional",     label: "Functional",     color: "#2a9257", blurb: "Response properties attached to coregistered cells." },
-  { id: "analysis",       label: "Analysis",       color: "#d9542f", blurb: "What you assemble yourself from the tables on the left." },
+  { id: "analysis",       label: "Analysis",       color: "#d9542f", blurb: "What you assemble yourself from the tables in this catalogue." },
 ];
 
 window.TABLES = {

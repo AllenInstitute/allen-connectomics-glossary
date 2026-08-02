@@ -36,7 +36,11 @@ Add an object to `data/terms.js`:
 - `datasets` — **omit it** if the term applies to both. Add `"datasets":["v1dd"]` only
   when a term is genuinely specific to one.
 - `flags` — `"ambiguous"` marks a word that means different things in different places
-  (it gets a ⚠). `"context"` marks background that is not really databook material.
+  (it gets a ⚠). `"context"` marks an adjacent technique that these datasets do not
+  themselves use, listed so the contrast is clear.
+- `source` — optional `{"label":"…","url":"…"}`, rendered as a small link chip. Use it
+  when a definition leans on one particular reference. Cite in this field, never in the
+  prose: a definition should read as a definition, not as a note about a document.
 - `ng` — see below.
 - Order does not matter; the site sorts.
 
@@ -56,11 +60,14 @@ Dataset-wide viewer links live in `data/config.js` under each dataset's `ng`.
 `group` from `window.TABLE_GROUPS`. Groups describe **what a table records** and each
 becomes one colour-coded column in the overview. They imply no ordering, so please do
 not add one that reads as a pipeline step. Row counts are copy-and-paste from the
-databook's *CAVE Annotation Tables* page.
+dataset's published table listing.
 
 Set `"derived": true` on an entry that is not a queryable CAVE table — the raw
 measurements and the things you assemble yourself. It renders greyed and dashed, and is
 left out of the table count.
+
+Group blurbs are read in the printed sheet as well as on screen, where the lanes may
+wrap. Do not describe a group by where it sits on the page.
 
 ### Add an R version of a recipe
 `data/snippets.js`. Each snippet already has a `python` key; add an `r` key next to it:
@@ -90,7 +97,8 @@ turn it on.
 
 ### Change the wording of a heading, or the revision stamp
 `data/config.js`, `window.SITE`. Bump `revision` when you make a change worth flagging
-to readers — it is printed on the cheat sheet.
+to readers — it is printed on the cheat sheet. `references` is the further-reading list
+in the footer; add to it rather than naming a source inside a definition.
 
 ## Checking your change
 
