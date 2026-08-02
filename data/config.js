@@ -5,8 +5,14 @@
 window.SITE = {
   title: "Allen Connectomics Glossary",
   // shown in the footer; bump when you make a change worth flagging to readers
-  revision: "2026-07",
-  databook: "https://allenswdb.github.io/anatomy/microns-em/em-background.html",
+  revision: "2026-08",
+  // listed in the footer as further reading. A definition that leans on one
+  // particular source should carry its own "source" field instead.
+  references: [
+    { label: "MICrONS & V1DD databook", url: "https://allenswdb.github.io/anatomy/microns-em/em-background.html" },
+    { label: "MICrONS Explorer",        url: "https://www.microns-explorer.org/" },
+    { label: "CAVEclient documentation", url: "https://caveconnectome.github.io/CAVEclient/" },
+  ],
   // the Community tab opens this in a new tab; clear it to drop the tab
   community: "https://community.brain-map.org/",
 };

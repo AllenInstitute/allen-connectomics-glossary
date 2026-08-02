@@ -85,14 +85,16 @@ function cardHTML(t, q){
   const amb = (t.flags || []).includes("ambiguous")
     ? `<span class="chip warn" title="This word means different things in different places">⚠ ambiguous</span>` : "";
   const ctx = (t.flags || []).includes("context")
-    ? `<span class="chip todo">background</span>` : "";
+    ? `<span class="chip aside" title="An adjacent method, not used to acquire these datasets">adjacent method</span>` : "";
+  const src = t.source && t.source.url
+    ? `<a class="chip src" href="${esc(t.source.url)}" target="_blank" rel="noopener">${esc(t.source.label)} ↗</a>` : "";
   const ng  = Object.entries(t.ng || {})
     .filter(([, url]) => url)
     .map(([k, url]) => `<a class="chip ng" href="${esc(url)}" target="_blank" rel="noopener">${DS[k] ? DS[k].label : esc(k)} ↗</a>`)
     .join("");
   const refs = (t.tables || []).length
     ? `<div class="refs">${t.tables.map(n => `<a href="#" data-goto-table="${esc(n)}">${esc(n)}</a>`).join("")}</div>` : "";
-  const meta = ds + amb + ctx + ng;
+  const meta = ds + amb + ctx + ng + src;
   return `<article class="card" style="border-left-color:${c.color}" id="term-${t.id}">
     ${svg ? `<div class="art">${svg}</div>` : ""}
     <div class="eb" style="color:${c.color}">${c.short}</div>
@@ -392,7 +394,8 @@ function applyTheme(){
 
 function init(){
   $("#siteTitle").textContent = window.SITE.title;
-  $("#dbLink").href           = window.SITE.databook;
+  $("#refs").innerHTML = (window.SITE.references || []).map(r =>
+    `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a>`).join(", ");
   const forum = $("#communityLink");
   if (window.SITE.community) forum.href = window.SITE.community;
   else forum.remove();
@@ -459,7 +462,7 @@ function init(){
     if (!a) return;
     e.preventDefault();
     S.view = "tables"; S.q = ""; $("#q").value = ""; save(); render(); writeHash();
-    const el = document.querySelector(`.trow[data-table="${CSS.escape(a.dataset.gotoTable)}"]`);
+    const el = document.querySelector(`.node[data-table="${CSS.escape(a.dataset.gotoTable)}"]`);
     if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
   });
 

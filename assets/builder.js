@@ -298,7 +298,7 @@ function doPrint(){
   let inFrame=false;
   try{ inFrame=(self!==top); }catch(e){ inFrame=true; }
   if(inFrame){
-    alert("Printing is blocked in the embedded preview.\n\nTo print:\n  1. Open the local HTML file directly in your browser\n     (double-click EM-Cheatsheet-Builder.html)\n  2. Navigate to Step 3 (Arrange & Print)\n  3. Click \"Print / Save PDF\" — or press Cmd+P (Mac) / Ctrl+P (Windows)\n\nIn the print dialog: set Paper = US Letter, Orientation = Portrait, enable Background graphics.");
+    alert("This page is running inside an embedded preview, where browsers block printing.\n\nOpen builder.html directly in a browser tab and press Cmd+P / Ctrl+P.\n\nIn the print dialog choose US Letter, portrait, and turn on background graphics.");
     return;
   }
   window.print();

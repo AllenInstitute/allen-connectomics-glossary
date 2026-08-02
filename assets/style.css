@@ -210,7 +210,10 @@ main{padding:1.4rem 20px 3rem}
 .chip.warn{border-color:currentColor; color:var(--axon)}
 .chip.ng{border-color:var(--accent); color:var(--accent-ink); text-decoration:none}
 .chip.ng:hover{background:var(--accent-soft)}
-.chip.todo{border-style:dotted; color:var(--faint)}
+.chip.aside{border-style:dotted; color:var(--faint)}
+/* provenance for a definition that leans on one particular source */
+.chip.src{border-style:dotted; color:var(--faint); text-decoration:none}
+.chip.src:hover{color:var(--accent-ink); border-color:var(--accent)}
 .card .refs{margin-top:.4rem; display:flex; flex-wrap:wrap; gap:.2rem}
 .card .refs a{font-family:var(--mono); font-size:.6rem; background:var(--panel); color:var(--muted);
   border-radius:4px; padding:.05rem .3rem; text-decoration:none; word-break:break-all}
