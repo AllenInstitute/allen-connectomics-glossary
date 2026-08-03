@@ -1,7 +1,5 @@
 # Allen Connectomics Glossary
 
-### → [lappalainenj.github.io/allen-connectomics-glossary](https://lappalainenj.github.io/allen-connectomics-glossary/)
-
 A searchable glossary and table reference for large-scale EM connectomics — currently
 covering **MICrONS** and **V1DD** — plus a printable cheat sheet built from the same
 content. Further reading is listed in the site footer and lives in `data/config.js`
