@@ -1,4 +1,4 @@
-/* Allen Connectomics Glossary — all behaviour.
+/* Allen Glossary — all behaviour.
    No build step, no dependencies. Data comes from the files in data/. */
 (() => {
 "use strict";
@@ -11,21 +11,35 @@ const CAT    = Object.fromEntries(CATS.map(c => [c.id, c]));
 const TERMS  = window.TERMS;
 const DS     = window.DATASETS;
 const DIAG   = window.DIAGRAMS || {};
-const GROUPS = window.TABLE_GROUPS;
-const TBL    = window.TABLES;
+const GROUPS = window.TABLE_GROUPS;   // keyed by discipline
+const TBL    = window.TABLES;         // keyed by dataset id
 const SNIPS  = window.SNIPPETS;
 const LANGS  = window.LANGUAGES;
+const DISCS  = window.DISCIPLINES;
 
 const STORE = "acg.v1";
 const S = Object.assign(
-  // `ds` scopes the table catalogue only; the glossary always shows every term
-  // and flags the few that belong to one dataset.
-  { view: "glossary", ds: "all", sort: "alpha", q: "", cats: [],
+  // `disc` is the top-level lens and scopes every view. `ds` scopes the table
+  // catalogue only; the glossary always shows every term of the active
+  // discipline and flags the few that belong to one dataset.
+  { view: "glossary", disc: "all", ds: "all", sort: "alpha", q: "", cats: [],
     theme: "auto", lang: "python",
     art: true, tables: true, snips: true, dens: "normal", sheetDs: "all" },
   readStore()
 );
 // cats: the categories the legend pills have narrowed to. Empty means all of them.
+
+/* ── discipline ──────────────────────────────────────────────────
+   A term inherits its discipline from its category unless it names its own.
+   "both" always passes: a cell type is the same cell however it was recorded. */
+const discOf   = t => t.discipline || (CAT[t.category] && CAT[t.category].discipline) || "both";
+const inDisc   = (d, want) => want === "all" || d === "both" || d === want;
+const activeDiscs = () => S.disc === "all" ? DISCS.map(d => d.id) : [S.disc];
+const visibleCats = () => CATS.filter(c => inDisc(c.discipline, S.disc));
+// dataset ids in view, in declaration order, honouring both filters
+const visibleDatasets = () => Object.keys(DS).filter(id =>
+  inDisc(DS[id].discipline, S.disc) && (S.ds === "all" || S.ds === id));
+const groupsFor = dsId => GROUPS[DS[dsId].discipline];
 
 function readStore(){ try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } }
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} }
@@ -46,15 +60,19 @@ function hl(html, q){
 
 function matches(t, q){
   if (!q) return true;
-  const hay = (t.term + " " + strip(t.def) + " " + CAT[t.category].label + " " +
+  const senses = (t.senses || []).map(s => strip(s.sense) + " " + strip(s.where)).join(" ");
+  const hay = (t.term + " " + strip(t.def) + " " + senses + " " + CAT[t.category].label + " " +
                (t.tables || []).join(" ")).toLowerCase();
   return hay.includes(q);
 }
 
+// everything the discipline filter lets through, before search or category pills
+function discTerms(){ return TERMS.filter(t => inDisc(discOf(t), S.disc)); }
+
 function visibleTerms(){
   const q = S.q.trim().toLowerCase();
   const cats = S.cats && S.cats.length ? new Set(S.cats) : null;
-  return TERMS.filter(t => matches(t, q) && (!cats || cats.has(t.category)));
+  return discTerms().filter(t => matches(t, q) && (!cats || cats.has(t.category)));
 }
 
 // how many terms each category would contribute, ignoring the category filter
@@ -62,7 +80,7 @@ function visibleTerms(){
 function catCounts(){
   const q = S.q.trim().toLowerCase();
   const n = {};
-  TERMS.filter(t => matches(t, q)).forEach(t => { n[t.category] = (n[t.category] || 0) + 1; });
+  discTerms().filter(t => matches(t, q)).forEach(t => { n[t.category] = (n[t.category] || 0) + 1; });
   return n;
 }
 
@@ -94,12 +112,18 @@ function cardHTML(t, q){
     .join("");
   const refs = (t.tables || []).length
     ? `<div class="refs">${t.tables.map(n => `<a href="#" data-goto-table="${esc(n)}">${esc(n)}</a>`).join("")}</div>` : "";
+  // a word with several incompatible meanings gets them listed rather than
+  // squeezed into one paragraph
+  const senses = (t.senses || []).length
+    ? `<ul class="senses">${t.senses.map(s =>
+        `<li><b>${hl(s.sense, q)}</b><span>${s.where}</span></li>`).join("")}</ul>` : "";
   const meta = ds + amb + ctx + ng + src;
   return `<article class="card" style="border-left-color:${c.color}" id="term-${t.id}">
     ${svg ? `<div class="art">${svg}</div>` : ""}
     <div class="eb" style="color:${c.color}">${c.short}</div>
     <h3><a class="perma" href="#term-${t.id}" title="Link to this term">${hl(esc(t.term), q)}</a></h3>
     <p>${hl(t.def, q)}</p>
+    ${senses}
     ${meta ? `<div class="meta">${meta}</div>` : ""}
     ${refs}
   </article>`;
@@ -110,19 +134,22 @@ function renderGlossary(){
   const list = visibleTerms();
   const out = $("#glossary");
 
-  if (!list.length){ out.innerHTML = ""; $("#glossEmpty").hidden = false; return; }
-  $("#glossEmpty").hidden = true;
-
   const byName = (a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase());
 
-  if (S.sort === "alpha"){
+  // an empty result still has to refresh the legend and the count, or they keep
+  // describing the previous search
+  $("#glossEmpty").hidden = !!list.length;
+
+  if (!list.length){
+    out.innerHTML = "";
+  } else if (S.sort === "alpha"){
     out.className = "grid";
     out.innerHTML = [...list].sort(byName).map(t => cardHTML(t, q)).join("");
   } else {
     // each category becomes its own titled section with its own grid, so the
     // grouping is unmistakable rather than implied by a thin rule
     out.className = "";
-    out.innerHTML = CATS.map(c => {
+    out.innerHTML = visibleCats().map(c => {
       const items = list.filter(t => t.category === c.id).sort(byName);
       if (!items.length) return "";
       return `<section class="catsec">
@@ -134,16 +161,17 @@ function renderGlossary(){
     }).join("");
   }
 
+  const total = discTerms().length;
   const filtered = S.q.trim() || (S.cats && S.cats.length);
   $("#count").textContent = filtered
-    ? `${list.length} of ${TERMS.length} terms` : `${TERMS.length} terms`;
+    ? `${list.length} of ${total} terms` : `${total} terms`;
   renderCatPills();
 }
 
 function renderCatPills(){
   const n = catCounts();
   const on = new Set(S.cats || []);
-  $("#catLegend").innerHTML = CATS.map(c =>
+  $("#catLegend").innerHTML = visibleCats().map(c =>
     `<button class="catpill" data-cat="${c.id}" style="--cc:${c.color}"
              aria-pressed="${on.has(c.id)}"><i></i>${esc(c.label)}
        <span class="n">${n[c.id] || 0}</span></button>`).join("")
@@ -174,6 +202,15 @@ const compact = n =>
 
 function datasetStats(dsId){
   const all = TBL[dsId];
+
+  // Physiology counts are per session, not per dataset, so there is nothing to
+  // read off the catalogue. Those datasets state their own headline numbers.
+  if (DS[dsId].stats){
+    const out = [{ v: String(all.filter(t => !t.derived).length), u: "", l: "objects" }]
+      .concat(DS[dsId].stats);
+    return statCard(out);
+  }
+
   const find = name => all.find(t => t.name === name);
   const biggest = group => all.filter(t => t.group === group && num(t.rows))
     .sort((a, b) => num(b.rows) - num(a.rows))[0];
@@ -193,8 +230,12 @@ function datasetStats(dsId){
     coreg && { n: num(coreg.rows), l: "units coregistered", sub: coreg.name },
   ].filter(Boolean);
 
+  return statCard(out);
+}
+
+function statCard(out){
   return `<div class="statcard">${out.map(s => {
-    const [v, u] = s.n != null ? compact(s.n) : [s.v, s.u];
+    const [v, u] = s.n != null ? compact(s.n) : [s.v, s.u || ""];
     return `<div class="stat"><b>${esc(v)}${u ? `<span class="u">${u}</span>` : ""}</b>
       <span>${esc(s.l)}</span>${s.sub ? `<em>${esc(s.sub)}</em>` : ""}</div>`;
   }).join("")}</div>`;
@@ -208,7 +249,7 @@ function datasetBlock(dsId){
   const rows = tableRows(dsId);
   const q = S.q.trim().toLowerCase();
 
-  const lanes = GROUPS.map(g => {
+  const lanes = groupsFor(dsId).map(g => {
     const items = rows.filter(t => t.group === g.id);
     return `<div class="lane${items.length ? "" : " dim"}">
       <div class="lane-h" style="background:${g.color}">${esc(g.label)}</div>
@@ -217,6 +258,8 @@ function datasetBlock(dsId){
         <div class="node${t.derived ? " derived" : ""}" style="border-left-color:${g.color}"
              id="tbl-${esc(dsId)}-${esc(t.name)}" data-table="${esc(t.name)}">
           <div class="n-name">${hl(esc(t.name), q)}</div>
+          ${t.access && t.access !== "—"
+              ? `<div class="n-access">${hl(esc(t.access), q)}</div>` : ""}
           <div class="n-keys">${t.rows && t.rows !== "—"
               ? `<b>${esc(t.rows)} rows</b>` : ""}${esc((t.keys || []).join(" · "))}</div>
           <p class="n-desc">${hl(esc(t.desc), q)}</p>
@@ -225,16 +268,18 @@ function datasetBlock(dsId){
     </div>`;
   }).join("");
 
+  // connectomics datasets are described by their datastack, physiology ones by
+  // how you open them — different facts, same row
+  const facts = d.datastack
+    ? [`datastack <b>${esc(d.datastack)}</b>`, `version <b>${esc(d.version)}</b>`,
+       `voxel <b>${esc(d.resolution)}</b>`, `server <b>${esc(d.server)}</b>`,
+       `<a href="${esc(d.ng)}" target="_blank" rel="noopener">open in Neuroglancer ↗</a>`]
+    : [`entry point <b>${esc(d.access)}</b>`, `packaged as <b>${esc(d.backend)}</b>`];
+
   return `<section class="dsblock">
     <header>
       <h2>${esc(d.label)}</h2>
-      <div class="facts">
-        <span>datastack <b>${esc(d.datastack)}</b></span>
-        <span>version <b>${esc(d.version)}</b></span>
-        <span>voxel <b>${esc(d.resolution)}</b></span>
-        <span>server <b>${esc(d.server)}</b></span>
-        <span><a href="${esc(d.ng)}" target="_blank" rel="noopener">open in Neuroglancer ↗</a></span>
-      </div>
+      <div class="facts">${facts.map(f => `<span>${f}</span>`).join("")}</div>
     </header>
     <p class="blurb">${esc(d.blurb)}</p>
     ${datasetStats(dsId)}
@@ -244,20 +289,28 @@ function datasetBlock(dsId){
 }
 
 function renderTables(){
-  const ids = S.ds === "all" ? ["microns", "v1dd"] : [S.ds];
+  const ids = visibleDatasets();
+  const intro = S.disc === "physiology"
+    ? `Physiology data is not a queryable database. A cache hands you manifest tables to filter, or you
+       open an NWB file and read objects at known paths — so each entry names the expression that gets
+       you the object rather than a row count.`
+    : `Each column collects the tables that record one kind of thing. Greyed entries are the underlying
+       measurements and the products you assemble yourself; the rest are CAVE tables you can query.`;
   $("#tablesOut").innerHTML =
-    `<h2 class="sec-h">Tables at a glance</h2>
-     <p class="sec-p">Each column collects the tables that record one kind of thing. Greyed entries are
-     the underlying measurements and the products you assemble yourself; the rest are CAVE tables you
-     can query.</p>`
-    + ids.map(datasetBlock).join("");
+    `<h2 class="sec-h">Tables at a glance</h2><p class="sec-p">${intro}</p>`
+    + (ids.length ? ids.map(datasetBlock).join("")
+                  : `<p class="empty">No datasets in this discipline.</p>`);
   renderSnips();
-  $("#count").textContent = ids
-    .map(i => `${tableRows(i).filter(t => !t.derived).length} ${DS[i].label} tables`).join(" · ");
+  $("#count").textContent = ids.length
+    ? `${ids.reduce((n, i) => n + tableRows(i).filter(t => !t.derived).length, 0)} entries · ${ids.length} datasets`
+    : "no datasets";
 }
 
+// a snippet with no `disc` belongs to every discipline
+const visibleSnips = () => SNIPS.filter(s => inDisc(s.disc || "both", S.disc));
+
 function renderSnips(){
-  $("#snips").innerHTML = SNIPS.map(s => {
+  $("#snips").innerHTML = visibleSnips().map(s => {
     const have = LANGS.filter(l => s[l.id]);
     const lang = s[S.lang] ? S.lang : (have[0] && have[0].id);
     const body = s[lang]
@@ -277,35 +330,47 @@ function renderSnips(){
 function renderSheet(){
   const list = [...visibleTerms()].sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
   const byCat = S.sort === "category";
-  const dsIds = S.sheetDs === "all" ? ["microns", "v1dd"] : [S.sheetDs];
-  const scope = dsIds.map(id => DS[id].label).join(" & ");
+  const dsIds = Object.keys(DS).filter(id =>
+    inDisc(DS[id].discipline, S.disc) && (S.sheetDs === "all" || S.sheetDs === id));
+  const scope = S.disc === "all"
+    ? DISCS.map(d => d.label).join(" & ")
+    : DISCS.find(d => d.id === S.disc).label;
 
   const glossBody = byCat
-    ? CATS.map(c => {
+    ? visibleCats().map(c => {
         const items = list.filter(t => t.category === c.id);
         if (!items.length) return "";
         return `<div class="sh-cat" style="color:${c.color}">${esc(c.label)}</div>` + items.map(g => sheetTerm(g)).join("");
       }).join("")
     : list.map(t => sheetTerm(t)).join("");
 
-  const tablesBody = !S.tables ? "" :
-    `<h2 class="sh-s">Tables at a glance</h2>` +
-    dsIds.map(id => `<div class="sh-ds">${esc(DS[id].label)}</div><div class="sh-lanes">` +
-      GROUPS.map(g => {
-        const items = TBL[id].filter(t => t.group === g.id);
-        if (!items.length) return "";
-        return `<div class="sh-lane"><div class="sh-lh" style="background:${g.color}">${esc(g.label)}</div>` +
-          items.map(t =>
-            `<div class="sh-t${t.derived ? " derived" : ""}" style="border-left-color:${g.color}">
-               <div class="n">${esc(t.name)}</div>
-               <div class="k">${esc((t.keys || []).slice(0, 4).join(" · "))}${
-                 t.rows && t.rows !== "—" ? " · " + esc(t.rows) : ""}</div></div>`).join("") +
-          `</div>`;
-      }).join("") + `</div>`).join("");
+  // One section per discipline, each under its own heading with its own group
+  // legend directly above it — the two group palettes must never be read
+  // against a single shared key.
+  const tablesBody = !S.tables ? "" : activeDiscs().map(dId => {
+    const ids = dsIds.filter(id => DS[id].discipline === dId);
+    if (!ids.length) return "";
+    const gs = GROUPS[dId];
+    return `<h2 class="sh-s">Tables at a glance · ${esc(DISCS.find(d => d.id === dId).label)}</h2>` +
+      `<div class="sh-leg"><b>Records</b>${gs.map(g =>
+        `<span><i style="background:${g.color}"></i>${esc(g.label)}</span>`).join("")}</div>` +
+      ids.map(id => `<div class="sh-ds">${esc(DS[id].label)}</div><div class="sh-lanes">` +
+        gs.map(g => {
+          const items = TBL[id].filter(t => t.group === g.id);
+          if (!items.length) return "";
+          return `<div class="sh-lane"><div class="sh-lh" style="background:${g.color}">${esc(g.label)}</div>` +
+            items.map(t =>
+              `<div class="sh-t${t.derived ? " derived" : ""}" style="border-left-color:${g.color}">
+                 <div class="n">${esc(t.name)}</div>
+                 <div class="k">${esc((t.keys || []).slice(0, 4).join(" · "))}${
+                   t.rows && t.rows !== "—" ? " · " + esc(t.rows) : ""}</div></div>`).join("") +
+            `</div>`;
+        }).join("") + `</div>`).join("");
+  }).join("");
 
   const snipsBody = !S.snips ? "" :
     `<h2 class="sh-s">Recipes</h2><div class="sh-snips">` +
-    SNIPS.filter(s => s[S.lang] || s.python).map(s =>
+    visibleSnips().filter(s => s[S.lang] || s.python).map(s =>
       `<pre class="sh-p"><b>${esc(s.title)}</b>${code(s[S.lang] || s.python)}</pre>`).join("") +
     `</div>`;
 
@@ -314,8 +379,7 @@ function renderSheet(){
       <h1>${esc(window.SITE.title)}</h1>
       <div class="sub"><b>${esc(scope)}</b><br>${esc(window.SITE.revision)}</div>
     </div>
-    <div class="sh-leg"><b>Category</b>${CATS.map(c => `<span><i style="background:${c.color}"></i>${esc(c.short)}</span>`).join("")}</div>
-    ${S.tables ? `<div class="sh-leg"><b>Table records</b>${GROUPS.map(g => `<span><i style="background:${g.color}"></i>${esc(g.label)}</span>`).join("")}</div>` : ""}
+    <div class="sh-leg"><b>Category</b>${visibleCats().map(c => `<span><i style="background:${c.color}"></i>${esc(c.short)}</span>`).join("")}</div>
     <h2 class="sh-s">Glossary · ${list.length} terms · ${byCat ? "grouped by category" : "A to Z"}${S.q ? " · matching “" + esc(S.q) + "”" : ""}</h2>
     <div class="sh-gloss ${esc(S.dens)}">${glossBody}</div>
     ${tablesBody}
@@ -329,11 +393,14 @@ function sheetTerm(t){
   const svg = S.art && t.diagram ? DIAG[t.diagram] : null;
   const only = t.datasets && t.datasets.length === 1 ? ` <span style="font-weight:400">(${DS[t.datasets[0]].label})</span>` : "";
   const amb = (t.flags || []).includes("ambiguous") ? ' <span style="color:#b07a2b">⚠</span>' : "";
+  const senses = (t.senses || []).length
+    ? `<ul class="sh-senses">${t.senses.map(s => `<li>${s.sense}</li>`).join("")}</ul>` : "";
   return `<div class="sh-g" style="border-left-color:${c.color}">
     ${svg ? `<div class="art">${svg}</div>` : ""}
     <div class="eb" style="color:${c.color}">${c.short}</div>
     <div class="tn">${esc(t.term)}${amb}${only}</div>
     <div class="df">${t.def}</div>
+    ${senses}
   </div>`;
 }
 
@@ -375,12 +442,36 @@ function writeHash(){
   try { history.replaceState(null, "", want); } catch { /* no-op */ }
 }
 
+/* The dataset pills depend on the discipline, so they are rebuilt rather than
+   written into the markup. "All datasets" is always first. */
+function renderDsPills(){
+  const ids = Object.keys(DS).filter(id => inDisc(DS[id].discipline, S.disc));
+  // a dataset selected under the previous discipline no longer exists here, so
+  // drop it — and persist the correction rather than leaving it in storage
+  let fixed = false;
+  if (!ids.includes(S.ds)){ S.ds = "all"; fixed = true; }
+  if (!ids.includes(S.sheetDs) && S.sheetDs !== "all"){ S.sheetDs = "all"; fixed = true; }
+  if (fixed) save();
+  $("#dsCtl").innerHTML = [["all", "All datasets"]]
+    .concat(ids.map(id => [id, DS[id].label]))
+    .map(([id, label]) =>
+      `<button class="dsb" data-ds="${esc(id)}" aria-pressed="${id === S.ds}">${esc(label)}</button>`)
+    .join("");
+
+  const sel = $("#optSheetDs");
+  sel.innerHTML = [["all", "all datasets"]].concat(ids.map(id => [id, DS[id].label]))
+    .map(([id, label]) => `<option value="${esc(id)}">${esc(label)}</option>`).join("");
+  sel.value = S.sheetDs;
+}
+
 function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
   $$("button.view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
+  $$(".discb").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.disc === S.disc)));
   // each control appears only where it does something
   $("#sortCtl").hidden = S.view === "tables";
   $("#dsCtl").hidden   = S.view !== "tables";
+  renderDsPills();
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
@@ -392,7 +483,15 @@ function applyTheme(){
   else r.setAttribute("data-theme", S.theme);
 }
 
+/* Bind once. A second DOMContentLoaded — or the file being included twice —
+   would otherwise attach every delegated listener again, and a toggle bound
+   twice fires twice per click, so it turns on and straight back off. */
+let started = false;
+
 function init(){
+  if (started) return;
+  started = true;
+
   $("#siteTitle").textContent = window.SITE.title;
   $("#refs").innerHTML = (window.SITE.references || []).map(r =>
     `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a>`).join(", ");
@@ -404,8 +503,12 @@ function init(){
 
   renderLegends();
 
+  $("#discCtl").innerHTML = [{ id: "all", label: "All" }].concat(DISCS)
+    .map(d => `<button class="discb" data-disc="${esc(d.id)}"
+       aria-pressed="${d.id === S.disc}"${d.blurb ? ` title="${esc(d.blurb)}"` : ""}>${esc(d.label)}</button>`)
+    .join("");
+
   $("#q").value = S.q;
-  $$(".dsb").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.ds === S.ds)));
   $$(".sb").forEach(b  => b.setAttribute("aria-pressed", String(b.dataset.sort === S.sort)));
   $("#optArt").checked = S.art; $("#optTables").checked = S.tables; $("#optSnips").checked = S.snips;
   $("#optDens").value = S.dens;
@@ -415,8 +518,22 @@ function init(){
   const target = readHash();
 
   $$("button.view").forEach(b => b.onclick = () => { S.view = b.dataset.view; save(); render(); writeHash(); });
-  $$(".dsb").forEach(b => b.onclick = () => {
-    S.ds = b.dataset.ds; $$(".dsb").forEach(x => x.setAttribute("aria-pressed", String(x === b))); save(); render();
+
+  // switching discipline drops any category pills that no longer exist in it
+  $("#discCtl").addEventListener("click", e => {
+    const b = e.target.closest(".discb");
+    if (!b) return;
+    S.disc = b.dataset.disc;
+    const live = new Set(visibleCats().map(c => c.id));
+    S.cats = (S.cats || []).filter(c => live.has(c));
+    save(); render();
+  });
+
+  // the pills are rebuilt whenever the discipline changes, so delegate
+  $("#dsCtl").addEventListener("click", e => {
+    const b = e.target.closest(".dsb");
+    if (!b) return;
+    S.ds = b.dataset.ds; save(); render();
   });
   $$(".sb").forEach(b => b.onclick = () => {
     S.sort = b.dataset.sort; $$(".sb").forEach(x => x.setAttribute("aria-pressed", String(x === b))); save(); render();

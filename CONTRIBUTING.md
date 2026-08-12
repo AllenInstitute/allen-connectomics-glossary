@@ -13,7 +13,7 @@ window.TERMS = [
 
 Leave the `window.X = ` line and the closing `];` alone. Everything between them is
 ordinary JSON — same rules: double quotes, commas between entries, no trailing comma
-after the last one. If the page comes up blank, that is almost always a missing comma;
+after the last one. `/* … */` section comments between entries are fine; nothing else. If the page comes up blank, that is almost always a missing comma;
 open the browser console (⌥⌘I / F12) and it will name the line.
 
 ## What to edit for what
@@ -32,7 +32,10 @@ Add an object to `data/terms.js`:
 ```
 
 - `id` — lowercase, hyphens, unique. It becomes the permalink (`index.html#term-my-term`).
-- `category` — one of the ids in `data/config.js`.
+- `category` — one of the ids in `data/config.js`. The category decides the term's
+  discipline, and so which of All / Connectomics / Physiology it appears under.
+- `discipline` — **omit it** unless the category's default is wrong for this one term.
+  `"both"` shows it under either discipline.
 - `datasets` — **omit it** if the term applies to both. Add `"datasets":["v1dd"]` only
   when a term is genuinely specific to one.
 - `flags` — `"ambiguous"` marks a word that means different things in different places
@@ -43,6 +46,23 @@ Add an object to `data/terms.js`:
   prose: a definition should read as a definition, not as a note about a document.
 - `ng` — see below.
 - Order does not matter; the site sorts.
+
+### Add a term that means several different things
+Give it a `senses` array instead of a paragraph that tries to cover every meaning:
+
+```js
+{"id":"epoch", "term":"Epoch", "category":"dataorg", "flags":["ambiguous"],
+ "def":"A labelled stretch of time — but of what, and on whose clock, differs.",
+ "senses":[
+   {"sense":"A block during which one stimulus type was shown",
+    "where":"stimulus epoch table; <code>nwb.epochs</code>"},
+   {"sense":"One pass of a training set", "where":"machine learning"}],
+ "ng":{}}
+```
+
+`sense` is what it means, `where` is where you will meet that meaning. Both accept
+inline `<code>`. They render as a short disambiguation list on the card and on the
+printed sheet.
 
 ### Add a Neuroglancer link
 Put the URL in a term's `ng` object, keyed by dataset:
@@ -56,13 +76,20 @@ way — `data/tables.js`, the `ng` field on a table, which takes a single URL st
 Dataset-wide viewer links live in `data/config.js` under each dataset's `ng`.
 
 ### Add, remove or re-describe a table
-`data/tables.js`. Tables are listed per dataset under `window.TABLES`, each with a
-`group` from `window.TABLE_GROUPS`. Groups describe **what a table records** and each
-becomes one colour-coded column in the overview. They imply no ordering, so please do
-not add one that reads as a pipeline step. Row counts are copy-and-paste from the
-dataset's published table listing.
+`data/tables.js`. Entries are listed per dataset under `window.TABLES`, each with a
+`group` from `window.TABLE_GROUPS[<discipline>]` — the two disciplines have separate
+group lists and separate colours.
 
-Set `"derived": true` on an entry that is not a queryable CAVE table — the raw
+A connectomics entry carries `rows` (a row count). A physiology entry carries `access`
+instead: the expression that gets you the object, such as `session.units` or
+`nwb.intervals['trials']`. Physiology data is not a queryable database, so a row count
+would be per session and meaningless here.
+
+Groups describe **what an entry records** and each becomes one colour-coded column in
+the overview. They imply no ordering, so please do not add one that reads as a pipeline
+step. Row counts are copy-and-paste from the dataset's published table listing.
+
+Set `"derived": true` on an entry that is not something you can query — the raw
 measurements and the things you assemble yourself. It renders greyed and dashed, and is
 left out of the table count.
 
@@ -81,9 +108,16 @@ wrap. Do not describe a group by where it sits on the page.
 The R tab on that block stops being greyed out. Nothing else needs to change. To add a
 third language, add it to `window.LANGUAGES` too.
 
+### Add a dataset
+`data/config.js`, `window.DATASETS`. Give it a `discipline`, a label and a blurb. A
+connectomics dataset describes itself with `datastack` / `version` / `resolution` /
+`server`; a physiology dataset with `access` / `backend`, plus a `stats` array of
+headline numbers, since those cannot be derived from a catalogue. Then add its
+catalogue to `window.TABLES` under the same id. The dataset pills build themselves.
+
 ### Change a category or a colour
 Glossary categories live in `data/config.js` under `window.CATEGORIES`; table-group
-colours live in `data/tables.js` under `window.TABLE_GROUPS`. Pick a hue distinguishable
+colours live in `data/tables.js` under `window.TABLE_GROUPS`, per discipline. Pick a hue distinguishable
 from the others in its own palette **and** from the four anatomy colours in
 `window.ANATOMY`. The site's colour rule — one palette, one meaning, one place — is
 spelled out in the README; please keep it true.
@@ -105,7 +139,8 @@ in the footer; add to it rather than naming a source inside a definition.
 Reload the page and look at it. Beyond that:
 
 - Search for the term you touched; make sure it appears where you expect.
-- Switch the dataset control to MICrONS and to V1DD.
+- Switch the discipline control through All, Connectomics and Physiology.
+- Switch the dataset control across a few datasets.
 - Open the Cheat sheet view and print to PDF — that is where a too-long definition
   shows up as an awkward column.
 - Try the dark theme (the ◐ button), since illustrations are drawn for both.

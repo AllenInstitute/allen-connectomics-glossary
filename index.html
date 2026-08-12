@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Allen Connectomics Glossary</title>
-<meta name="description" content="A searchable glossary and table reference for the MICrONS and V1DD electron-microscopy connectomics datasets.">
+<title>Allen Glossary</title>
+<meta name="description" content="A searchable glossary and table reference for the Allen Institute connectomics and physiology datasets.">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
   <div class="wrap topbar-in">
     <div class="brand">
       <span class="mark" aria-hidden="true"></span>
-      <span class="brand-t"><b id="siteTitle">Allen Connectomics Glossary</b></span>
+      <span class="brand-t"><b id="siteTitle">Allen Glossary</b></span>
     </div>
 
     <button class="theme" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">
@@ -32,11 +32,9 @@
          target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
     </nav>
 
-    <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden>
-      <button class="dsb" data-ds="all" aria-pressed="true">All datasets</button>
-      <button class="dsb" data-ds="microns" aria-pressed="false">MICrONS</button>
-      <button class="dsb" data-ds="v1dd" aria-pressed="false">V1DD</button>
-    </div>
+    <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
+
+    <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden></div>
 
     <label class="search" id="searchCtl">
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -87,17 +85,13 @@
   <section id="view-sheet" class="view-pane" hidden>
     <div class="sheet-ctl no-print">
       <h2 class="sec-h">Printable cheat sheet</h2>
-      <p class="sec-p">Built from whatever the dataset, search and sort controls above are set to. Content flows across as many pages as it needs.</p>
+      <p class="sec-p">Built from whatever the discipline, dataset, search and sort controls above are set to. Content flows across as many pages as it needs.</p>
       <div class="opts">
         <label><input type="checkbox" id="optArt" checked> Illustrations</label>
         <label><input type="checkbox" id="optTables" checked> Table catalogue</label>
         <label><input type="checkbox" id="optSnips" checked> Recipes</label>
         <label class="dens">Tables for
-          <select id="optSheetDs">
-            <option value="all" selected>all datasets</option>
-            <option value="microns">MICrONS</option>
-            <option value="v1dd">V1DD</option>
-          </select>
+          <select id="optSheetDs"></select>
         </label>
         <label class="dens">Density
           <select id="optDens">

@@ -1,7 +1,7 @@
 // Inline every stylesheet and script into one self-contained HTML file, for
 // emailing to someone or hosting where a folder is inconvenient.
 //
-//   node scripts/bundle.mjs                 -> dist/allen-connectomics-glossary.html
+//   node scripts/bundle.mjs                 -> dist/allen-glossary.html
 //   node scripts/bundle.mjs builder.html    -> dist/builder.html
 //
 // The bundle is a build artefact. Edit data/ and re-run; never edit dist/.
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const src = process.argv[2] || "index.html";
-const outName = src === "index.html" ? "allen-connectomics-glossary.html" : path.basename(src);
+const outName = src === "index.html" ? "allen-glossary.html" : path.basename(src);
 
 const read = p => fs.readFileSync(path.join(ROOT, p), "utf8");
 // a </script> inside a string literal would close the host tag early

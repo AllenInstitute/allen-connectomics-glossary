@@ -1,15 +1,14 @@
-# Allen Connectomics Glossary
+# Allen Glossary
 
-A searchable glossary and table reference for large-scale EM connectomics — currently
-covering **MICrONS** and **V1DD** — plus a printable cheat sheet built from the same
-content. Further reading is listed in the site footer and lives in `data/config.js`
+A searchable glossary and table reference for the Allen Institute datasets, across two
+disciplines — **connectomics** (MICrONS, V1DD) and **physiology** (Visual Coding, Visual
+Behavior, V1DD 2P, BCI, Dynamic Foraging, NP Ultra, CTLUT) — plus a printable cheat sheet
+built from the same content. Further reading is listed in the site footer and lives in `data/config.js`
 under `SITE.references`; a definition that leans on one particular source carries its
 own link chip.
 
-The live site above is the easiest way in. It is served by GitHub Pages from `main`, so
-anything merged is live within a minute or so. There is no build step, no server and no
-dependencies, which also means you can clone the repo and double-click `index.html` —
-it behaves identically offline.
+There is no build step, no server and no dependencies: clone the repo and double-click
+`index.html`, and it behaves exactly as it would when hosted.
 
 | | |
 |---|---|
@@ -23,9 +22,17 @@ it behaves identically offline.
 To refresh `dist/` after editing `data/`: `node scripts/bundle.mjs` (and
 `node scripts/bundle.mjs builder.html`). Nothing else needs Node.
 
+## Disciplines
+
+**All / Connectomics / Physiology** sits under the view tabs and scopes everything below
+it: which terms are in the glossary, which categories the legend offers, which datasets
+the Tables view lists, and what the cheat sheet prints. A term inherits its discipline
+from its category, unless it declares its own — cell types belong to `both`, because a
+basket cell is the same cell however it was recorded.
+
 ## The three views
 
-**Glossary** — 120 terms, alphabetical by default, switchable to grouping by category.
+**Glossary** — 249 terms, alphabetical by default, switchable to grouping by category.
 Entries read left to right along each row. Search matches names, definitions and
 category names; the category legend doubles as a filter, and clicking pills narrows the
 glossary in either ordering. Every term has a permalink (`index.html#term-voxel`) you
@@ -35,14 +42,20 @@ The illustrations are generated rather than hand-drawn. They are under review, a
 errors cannot be ruled out at this stage — the site says so next to the legend and in
 the footer, and the note is repeated on the printed sheet.
 
-**Tables** — the CAVE annotation tables most analyses start from, one overview
-per dataset, with row counts, key columns and one-line descriptions. One colour-coded
-column per kind of thing a table records, side by side, so the whole catalogue reads at
-a glance, above a row of headline numbers for the dataset. The greyed entries at each
-end are the underlying measurements and the products you assemble yourself; they are
-shown for context and are not queryable tables.
+**Tables** — one overview per dataset: colour-coded columns for the kinds of thing a
+dataset records, side by side, above a row of headline numbers. Greyed entries are shown
+for context and are not things you can query.
 
-The dataset control applies here.
+The two disciplines are shaped differently, and the view says so:
+
+- **Connectomics** lists CAVE annotation tables with **row counts**. Groups: raw,
+  detection, classification, proofreading, coregistration, functional, analysis.
+- **Physiology** has no queryable database. A cache hands you manifest tables, or you
+  open an NWB file and read objects at known paths — so each entry carries the
+  **`access` expression** that gets you the object instead of a row count. Groups: find,
+  cells & units, quality, activity, stimulus, behavior, analysis.
+
+The dataset control applies here, and lists the datasets of the active discipline.
 
 **Cheat sheet** — a printable sheet generated from whatever the dataset, search and sort
 controls are set to. It flows across as many US Letter pages as the content needs and
@@ -53,8 +66,8 @@ press ⌘P / Ctrl+P from any view.
 in a new tab. The URL lives in `data/config.js` under `SITE.community`; clear it and the tab
 disappears.
 
-The dataset control (All / MICrONS / V1DD) belongs to the Tables view, where choosing
-one is a real question. The glossary always shows every term and marks the handful that
+The dataset control belongs to the Tables view, where choosing one is a real question.
+The glossary always shows every term of the active discipline and marks the handful that
 belong to one dataset with a chip. The cheat sheet has its own dataset selector, next to
 its other print options, for the table section it includes.
 
@@ -64,13 +77,15 @@ Each palette has one meaning, one place it appears, and a legend where it appear
 
 - **Glossary cards: colour = the term's category.** Left rule and eyebrow, nowhere else.
 - **Table overview: colour = what the table records.** Lane headers and node rules,
-  nowhere else. The lane headings are their own legend.
+  nowhere else. The lane headings are their own legend. Each discipline has its own set
+  of seven hues, because the two group palettes mean different things.
 - **Illustrations: colour = anatomy** — structure, dendrite, axon, synapse.
 - **Datasets are not colour-coded**, in any view.
 
-The glossary and the table overview are separate views, so the first two palettes never
-share a surface. The printed sheet is the one place both appear, and it carries both
-legends. If you add a category or a table group, pick a hue distinguishable from its
+The glossary and the table overview are separate views, so those palettes never share a
+surface. The printed sheet is the one place they meet, and it prints each discipline's
+table section under its own heading with its own legend directly above it — never one
+merged key. If you add a category or a table group, pick a hue distinguishable from its
 own palette *and* from the four anatomy colours.
 
 ## Making changes
@@ -82,6 +97,13 @@ disk. Edit the data, reload the page.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for exactly what to edit for a given change —
 fixing a definition, adding a term, adding a Neuroglancer link, adding an R snippet.
 
+## Multi-sense entries
+
+Some words mean several incompatible things — Session, Experiment, Container, Unit,
+Epoch, Distance, State. Those carry a `senses` array instead of trying to squeeze every
+meaning into one paragraph, and render as a short disambiguation list. Prefer this to a
+long definition whenever the honest answer is "it depends which one you mean".
+
 ## Still to do
 
 - **Neuroglancer links per term.** Every term and every table has an `ng` field, empty
@@ -90,4 +112,4 @@ fixing a definition, adding a term, adding a Neuroglancer link, adding an R snip
 - **R alongside Python.** The recipe blocks are keyed by language and the R tab is
   already there, disabled. Adding an `r:` key to a snippet in `data/snippets.js` lights
   it up — no code change needed.
-- **Illustrations.** 84 of 120 terms have one.
+- **Illustrations.** 147 of 249 terms have one.
