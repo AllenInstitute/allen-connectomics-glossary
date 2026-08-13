@@ -114,7 +114,9 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
    when they move apart the neck thins and snaps. No outlines — the surface is
    the whole signal. Geometry comes from a spring integrator in app.js, which
    is what gives the overshoot; CSS here does no animating of its own. */
-.scope{position:relative; padding-top:.6rem; padding-bottom:.15rem}
+/* the surface is clipped to the control: at the widest span the neck is thick
+   enough that it would otherwise run past the header rule and over the page */
+.scope{position:relative; padding-top:.75rem; padding-bottom:.3rem; overflow:hidden}
 .scope > .disc, .scope > .views{position:relative; z-index:1}
 .goo-defs{position:absolute; width:0; height:0; pointer-events:none}
 

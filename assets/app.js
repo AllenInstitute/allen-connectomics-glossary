@@ -481,6 +481,18 @@ function renderDsPills(){
 // liquid, not so much that the control keeps wobbling after you have moved on
 const SPRING = { k: 0.26, damp: 0.62, eps: 0.05 };
 
+// the surface sits a little inside the pills it marks, so it stays quieter than
+// the rest of the page
+const SURFACE = 0.9;
+
+/* The neck is a rendering compensation rather than physics. When the two
+   selections are adjacent the blobs already fuse on their own, so a fat bridge
+   just reads as one shapeless blob and it wants thinning; when they are at
+   opposite ends the threshold all but erases a thin strand, so it wants
+   thickening. Anchored to the real geometry of this control: the closest pair
+   is ~36 px centre to centre, the widest ~190 px. */
+const NECK = { near: 36, far: 190, thin: 8.5, thick: 25 };
+
 const blobs = new Map();   // element -> {x,y,w,h} current + velocities
 let springFrame = null;
 
@@ -526,8 +538,10 @@ function placeScope(){
     const r = target.getBoundingClientRect();
     if (!r.width){ el.style.setProperty("--on", "0"); return null; }   // hidden, e.g. in jsdom
     const s = blobState(el);
-    s.target = { x: r.left - base.left - padX, y: r.top - base.top - padY,
-                 w: r.width + padX * 2, h: r.height + padY * 2 };
+    const boxW = r.width + padX * 2, boxH = r.height + padY * 2;
+    const w = boxW * SURFACE, h = boxH * SURFACE;      // shrunk about its centre
+    s.target = { x: r.left - base.left - padX + (boxW - w) / 2,
+                 y: r.top  - base.top  - padY + (boxH - h) / 2, w, h };
     if (still) s.cur = { ...s.target };
     el.style.setProperty("--on", "1");
     return s.target;
@@ -542,13 +556,15 @@ function placeScope(){
   if (bridge){
     if (!d || !v){ bridge.style.setProperty("--on", "0"); }
     else {
-      const from = { x: d.x + d.w / 2, y: d.y + d.h / 2 };
-      const to   = { x: v.x + v.w / 2, y: v.y + v.h / 2 };
+      // edge to edge rather than centre to centre: a thick neck drawn between
+      // the centres sweeps outside the control at a shallow angle, where this
+      // one stays in the band between the two rows
+      const from = { x: d.x + d.w / 2, y: d.y + d.h * 0.72 };
+      const to   = { x: v.x + v.w / 2, y: v.y + v.h * 0.28 };
       const dx = to.x - from.x, dy = to.y - from.y;
       const len = Math.hypot(dx, dy);
-      // a real bridge thins as it is drawn out: short span, fat neck; long span,
-      // a strand under tension that the threshold nearly erases
-      const h = Math.max(7, Math.min(17, 20 - len / 26));
+      const t = Math.max(0, Math.min(1, (len - NECK.near) / (NECK.far - NECK.near)));
+      const h = NECK.thin + t * (NECK.thick - NECK.thin);
       const s = blobState(bridge);
       s.target = { x: from.x, y: from.y, w: len, h };
       s.targetAng = Math.atan2(dy, dx) * 180 / Math.PI;
