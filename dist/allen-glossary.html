@@ -2237,17 +2237,19 @@ const SPRING = { k: 0.26, damp: 0.62, eps: 0.05 };
 // the rest of the page
 const SURFACE = 0.9;
 
-/* The neck is a rendering compensation rather than physics. When the two
-   selections are adjacent the blobs already fuse on their own, so a fat bridge
-   just reads as one shapeless blob and it wants thinning; when they are at
-   opposite ends the threshold all but erases a thin strand, so it wants
-   thickening. Anchored to the real geometry of this control: the closest pair
-   is ~36 px apart, the widest ~190 px.
+/* The neck is a rendering compensation rather than physics.
 
-   `thick` is bounded by the gutter between the two rows, which is about 12 px.
-   A neck fatter than that cannot stay inside the gutter on a long span, so it
-   rides over the labels in between and the whole shape reads as a slab. */
-const NECK = { near: 36, far: 190, thin: 7, thick: 14 };
+   The threshold erodes a blurred edge, so a bar has to clear a minimum width
+   before any of it survives at all. Measured against this filter at
+   stdDeviation 9: 12 px and below vanishes completely, 14 px is a faint
+   sliver, 16 px is the first solid strand. Anything thinner than that is not a
+   delicate neck, it is an invisible one.
+
+   So: spans short enough that the two blobs already overlap need no bar — they
+   fuse on their own into a narrow waist, which is the thin end of the range.
+   Everything longer gets a bar, starting just above the survival width and
+   growing with distance. Spans in this control run from ~7 px to ~187 px. */
+const NECK = { near: 40, far: 187, thin: 16, thick: 20, floor: 7 };
 
 const blobs = new Map();   // element -> {x,y,w,h} current + velocities
 let springFrame = null;
@@ -2320,7 +2322,8 @@ function placeScope(){
       const dx = to.x - from.x, dy = to.y - from.y;
       const len = Math.hypot(dx, dy);
       const t = Math.max(0, Math.min(1, (len - NECK.near) / (NECK.far - NECK.near)));
-      const h = NECK.thin + t * (NECK.thick - NECK.thin);
+      const h = len < NECK.near ? NECK.floor
+                                : NECK.thin + t * (NECK.thick - NECK.thin);
       const s = blobState(bridge);
       s.target = { x: from.x, y: from.y, w: len, h };
       s.targetAng = Math.atan2(dy, dx) * 180 / Math.PI;
