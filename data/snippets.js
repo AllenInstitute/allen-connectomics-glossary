@@ -73,35 +73,37 @@ complete    = pr[pr.strategy_axon.isin(["axon_fully_extended",
     id: "open",
     disc: "physiology",
     title: "Open a session",
-    python: `# Brain Observatory datasets: a cache hands you manifest tables,
-# then session objects
-from allensdk.brain_observatory.behavior.behavior_project_cache import (
-    VisualBehaviorOphysProjectCache)
-
-cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=cache_dir)
-experiments = cache.get_ophys_experiment_table()   # one row per imaging plane
-exp = cache.get_behavior_ophys_experiment(experiments.index[0])
-
-# Newer datasets: no cache, no manifest — open the NWB file directly
-from hdmf_zarr import NWBZarrIO
+    python: `from hdmf_zarr import NWBZarrIO
 
 nwb = NWBZarrIO(session_path, "r").read()
-nwb.units[:]                       # sorted units, one row each
-nwb.intervals["trials"][:]         # task trials`,
+
+# the same seven places in every file, whatever the experiment was
+nwb.subject                        # who
+nwb.devices, nwb.electrodes        # what recorded it
+nwb.acquisition                    # signals as acquired
+nwb.stimulus                       # what was presented
+nwb.intervals                      # epochs, trials, blocks
+nwb.processing                     # anything derived
+nwb.units[:]                       # sorted units, ephys only
+
+# print the tree before assuming a path: layouts differ between datasets
+list(nwb.intervals), list(nwb.processing), list(nwb.stimulus)`,
   },
   {
     id: "quality",
     disc: "physiology",
     title: "Filter units by quality",
-    python: `units = session.units            # or nwb.units[:]
+    python: `units = nwb.units[:]
 
 good = units[(units.isi_violations < 0.5) &     # contamination
              (units.amplitude_cutoff < 0.1) &   # spikes missed
              (units.presence_ratio > 0.9)]      # present all session
 
-# Visual Coding applies these by default. Visual Behavior Neuropixels does
-# not — it returns every unit. Loosen them if you do not need well-isolated
-# units, tighten them if you do.`,
+# newer files carry default_qc, which is the pipeline's own verdict:
+good = units[units.default_qc]
+
+# thresholds are a choice, not a fact. Loosen them if you do not need
+# well-isolated units, tighten them if you do.`,
   },
   {
     id: "psth",
@@ -109,11 +111,11 @@ good = units[(units.isi_violations < 0.5) &     # contamination
     title: "Align spikes to a stimulus",
     python: `import numpy as np
 
-stim = session.stimulus_presentations
-onsets = stim[stim.stimulus_name == "natural_scenes"].start_time.values
+trials = nwb.intervals["trials"][:]
+onsets = trials.loc[trials.is_vis_target, "stim_start_time"].values
 
 bins = np.arange(-0.2, 0.5, 0.01)              # s, relative to onset
-spikes = session.spike_times[unit_id]
+spikes = nwb.units["spike_times"][unit_row]
 counts = np.stack([np.histogram(spikes - t, bins)[0] for t in onsets])
 
 psth = counts.mean(0) / np.diff(bins)          # spikes / s`,
@@ -122,12 +124,15 @@ psth = counts.mean(0) / np.diff(bins)          # spikes / s`,
     id: "locate",
     disc: "physiology",
     title: "Give a unit a brain area",
-    python: `# a unit carries no position of its own: it inherits one from the
-# channel where its waveform was largest
-located = session.units.merge(session.channels,
-                              left_on="peak_channel_id", right_index=True)
+    python: `units = nwb.units[:]
+electrodes = nwb.electrodes[:]           # general/extracellular_ephys
 
-located[["firing_rate", "ecephys_structure_acronym",
-         "anterior_posterior_ccf_coordinate"]].head()`,
+# a unit points at the electrodes its waveform appeared on; the strongest
+# one carries its location. Some files precompute this as unit columns
+# (ccf_ap / ccf_dv / ccf_ml, brain_region) — check before you join.
+units["peak_electrode"] = [e[0] for e in units["electrodes"]]
+located = units.merge(electrodes, left_on="peak_electrode", right_index=True)
+
+located[["firing_rate", "structure", "x", "y", "z"]].head()`,
   },
 ];

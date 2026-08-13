@@ -107,13 +107,48 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .brand-t i{font-style:normal; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em;
   text-transform:uppercase; color:var(--faint)}
 
-/* the view switcher sits in the control bar, ahead of the controls it governs */
-.views{display:flex; gap:.15rem; padding-right:.85rem; margin-right:.15rem;
-  border-right:1px solid var(--line)}
+/* ── scope: discipline over view ─────────────────────────────────
+   Two rows, one control. A single highlight sits behind the selected pill in
+   each row and slides between them, and a link is drawn from one to the other,
+   so the current scope — Physiology › Tables — reads as one shape. Positions
+   come from JS as custom properties; everything here just transitions. */
+.scope{position:relative; padding-top:.6rem; padding-bottom:.15rem}
+.scope > *{position:relative; z-index:1}
+.scope-hl, .scope-link{position:absolute; z-index:0; pointer-events:none}
+.scope-hl{left:0; top:0; height:var(--h, 0px); width:var(--w, 0px);
+  transform:translate(var(--x, 0px), var(--y, 0px));
+  background:var(--accent-soft); border:1px solid var(--accent); border-radius:99px;
+  opacity:var(--on, 0);
+  transition:transform .34s cubic-bezier(.22,.8,.24,1), width .34s cubic-bezier(.22,.8,.24,1),
+             height .34s cubic-bezier(.22,.8,.24,1), opacity .2s}
+.scope-hl[data-row="disc"]{background:none; border-color:var(--line-2)}
+/* one straight segment from the discipline pill down to the view tab. A rotated
+   box rather than an SVG path, because transform and width transition in every
+   browser and the `d` property does not. */
+.scope-link{left:0; top:0; height:1.5px; width:var(--len, 0px); border-radius:2px;
+  transform-origin:0 50%;
+  transform:translate(var(--x, 0px), var(--y, 0px)) rotate(var(--ang, 0deg));
+  background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 25%, transparent), var(--accent));
+  opacity:var(--on, 0);
+  transition:transform .34s cubic-bezier(.22,.8,.24,1), width .34s cubic-bezier(.22,.8,.24,1),
+             opacity .2s}
+
+.disc{display:flex; align-items:center; gap:.2rem; flex-wrap:wrap}
+.discb{appearance:none; font:inherit; font-size:.74rem; cursor:pointer; color:var(--faint);
+  background:none; border:0; padding:.2rem .7rem; border-radius:99px;
+  letter-spacing:.04em; text-transform:uppercase; transition:color .2s}
+.discb:hover{color:var(--ink)}
+.discb[aria-pressed="true"]{color:var(--ink); font-weight:600}
+
+.views{display:flex; gap:.15rem; margin-top:.75rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
-  padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap}
-.view:hover{color:var(--ink); background:var(--panel)}
-.view[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:600}
+  padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .2s}
+.view:hover{color:var(--ink)}
+.view[aria-current="page"]{color:var(--accent-ink); font-weight:600}
+
+@media (prefers-reduced-motion: reduce){
+  .scope-hl, .scope-link path{transition:none}
+}
 /* leaves the site, so it is set apart from the tabs that switch views */
 a.view.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.25rem;
   margin-left:.35rem; padding-left:.9rem; border-left:1px solid var(--line); border-radius:0}
@@ -257,6 +292,9 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 .dsblock > header .facts{margin-left:auto; font-family:var(--mono); font-size:.63rem; color:var(--muted);
   display:flex; flex-wrap:wrap; gap:.15rem .8rem}
 .dsblock > header .facts b{color:var(--ink); font-weight:600}
+/* the S3 asset a physiology catalogue was read from — long, and worth wrapping
+   rather than truncating, since it is the thing you would paste into a check */
+.dsblock > header .facts b.asset{font-weight:500; color:var(--muted); overflow-wrap:anywhere}
 .dsblock > p.blurb{margin:.5rem 0 .9rem; color:var(--muted); font-size:.84rem; max-width:70ch}
 
 /* at-a-glance numbers for a dataset, read off the table catalogue itself */
@@ -296,7 +334,8 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
    CAVE table names a row count */
 .node .n-access{font-family:var(--mono); font-size:.58rem; color:var(--accent-ink);
   background:var(--accent-soft); border-radius:3px; padding:.1rem .28rem; margin:.16rem 0 .1rem;
-  display:inline-block; max-width:100%; overflow-wrap:anywhere}
+  display:inline-block; max-width:100%; word-break:normal; overflow-wrap:break-word;
+  line-height:1.35}
 .node .chip.ng{margin-top:.25rem}
 .node:target{outline:2px solid var(--accent); outline-offset:3px}
 

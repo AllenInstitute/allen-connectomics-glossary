@@ -23,7 +23,15 @@
     </button>
   </div>
 
-  <div class="wrap ctrlbar">
+  <!-- what you are looking at: discipline first, then the view of it. The two
+       rows are one control, and the highlight that links them says so. -->
+  <div class="wrap scope">
+    <i class="scope-link" aria-hidden="true"></i>
+    <div class="scope-hl" data-row="disc" aria-hidden="true"></div>
+    <div class="scope-hl" data-row="view" aria-hidden="true"></div>
+
+    <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
+
     <nav class="views" aria-label="Views">
       <button class="view" data-view="glossary" aria-current="page">Glossary</button>
       <button class="view" data-view="tables">Tables</button>
@@ -31,9 +39,9 @@
       <a class="view out" id="communityLink" href="https://community.brain-map.org/"
          target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
     </nav>
+  </div>
 
-    <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
-
+  <div class="wrap ctrlbar">
     <div class="ds" role="group" aria-label="Dataset" id="dsCtl" hidden></div>
 
     <label class="search" id="searchCtl">

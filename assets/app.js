@@ -274,7 +274,11 @@ function datasetBlock(dsId){
     ? [`datastack <b>${esc(d.datastack)}</b>`, `version <b>${esc(d.version)}</b>`,
        `voxel <b>${esc(d.resolution)}</b>`, `server <b>${esc(d.server)}</b>`,
        `<a href="${esc(d.ng)}" target="_blank" rel="noopener">open in Neuroglancer ↗</a>`]
-    : [`entry point <b>${esc(d.access)}</b>`, `packaged as <b>${esc(d.backend)}</b>`];
+    // for physiology the useful facts are how you open it and — so that any of
+    // this can be checked — which asset was read to describe it
+    : [`open with <b>${esc(d.access)}</b>`, `packaged as <b>${esc(d.backend)}</b>`]
+        .concat(d.asset ? [`described from <b class="asset">${esc(d.asset)}</b>`] : [])
+        .concat(d.ng ? [`<a href="${esc(d.ng)}" target="_blank" rel="noopener">open in Neuroglancer ↗</a>`] : []);
 
   return `<section class="dsblock">
     <header>
@@ -291,9 +295,10 @@ function datasetBlock(dsId){
 function renderTables(){
   const ids = visibleDatasets();
   const intro = S.disc === "physiology"
-    ? `Physiology data is not a queryable database. A cache hands you manifest tables to filter, or you
-       open an NWB file and read objects at known paths — so each entry names the expression that gets
-       you the object rather than a row count.`
+    ? `Physiology data is not a queryable database — it is an NWB file, and every file has the same
+       top-level groups whatever the experiment was. The columns below are those groups; what differs
+       between datasets is what fills them. Each entry names the path that gets you the object, and
+       every dataset names the asset its structure was read from.`
     : `Each column collects the tables that record one kind of thing. Greyed entries are the underlying
        measurements and the products you assemble yourself; the rest are CAVE tables you can query.`;
   $("#tablesOut").innerHTML =
@@ -301,8 +306,9 @@ function renderTables(){
     + (ids.length ? ids.map(datasetBlock).join("")
                   : `<p class="empty">No datasets in this discipline.</p>`);
   renderSnips();
+  const nEntries = ids.reduce((n, i) => n + tableRows(i).filter(t => !t.derived).length, 0);
   $("#count").textContent = ids.length
-    ? `${ids.reduce((n, i) => n + tableRows(i).filter(t => !t.derived).length, 0)} entries · ${ids.length} datasets`
+    ? `${nEntries} ${nEntries === 1 ? "entry" : "entries"} · ${ids.length} ${ids.length === 1 ? "dataset" : "datasets"}`
     : "no datasets";
 }
 
@@ -464,6 +470,40 @@ function renderDsPills(){
   sel.value = S.sheetDs;
 }
 
+/* Place the two highlights and the line joining them. Everything is measured
+   from the live layout, so it survives wrapping, resizing and font swaps; the
+   transitions in the stylesheet do the animating. */
+function placeScope(){
+  const scope = $(".scope");
+  if (!scope) return;
+  const base = scope.getBoundingClientRect();
+  const put = (el, target, padX, padY) => {
+    if (!el) return null;
+    if (!target){ el.style.setProperty("--on", "0"); return null; }
+    const r = target.getBoundingClientRect();
+    const x = r.left - base.left - padX, y = r.top - base.top - padY;
+    el.style.setProperty("--x", x + "px");
+    el.style.setProperty("--y", y + "px");
+    el.style.setProperty("--w", (r.width + padX * 2) + "px");
+    el.style.setProperty("--h", (r.height + padY * 2) + "px");
+    el.style.setProperty("--on", "1");
+    return { cx: x + (r.width + padX * 2) / 2, top: y, bottom: y + r.height + padY * 2 };
+  };
+
+  const d = put($('.scope-hl[data-row="disc"]'), $('.discb[aria-pressed="true"]'), 6, 3);
+  const v = put($('.scope-hl[data-row="view"]'), $('button.view[aria-current="page"]'), 2, 2);
+
+  const link = $(".scope-link");
+  if (!link) return;
+  if (!d || !v){ link.style.setProperty("--on", "0"); return; }
+  const dx = v.cx - d.cx, dy = v.top - d.bottom;
+  link.style.setProperty("--x", d.cx + "px");
+  link.style.setProperty("--y", d.bottom + "px");
+  link.style.setProperty("--len", Math.hypot(dx, dy) + "px");
+  link.style.setProperty("--ang", (Math.atan2(dy, dx) * 180 / Math.PI) + "deg");
+  link.style.setProperty("--on", dy > 1 ? "1" : "0");
+}
+
 function render(){
   $$(".view-pane").forEach(p => { p.hidden = p.id !== "view-" + S.view; });
   $$("button.view").forEach(b => b.setAttribute("aria-current", b.dataset.view === S.view ? "page" : "false"));
@@ -475,6 +515,7 @@ function render(){
   if (S.view === "glossary") renderGlossary();
   else if (S.view === "tables") renderTables();
   else { renderSheet(); $("#count").textContent = `${visibleTerms().length} terms on the sheet`; }
+  placeScope();
 }
 
 function applyTheme(){
@@ -590,6 +631,11 @@ function init(){
 
   // printing from any view produces the sheet
   window.addEventListener("beforeprint", renderSheet);
+
+  // the highlights are measured from layout, so anything that reflows moves them
+  let rz = null;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(placeScope, 80); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeScope);
 
   window.addEventListener("hashchange", () => {
     const was = S.view;

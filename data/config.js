@@ -12,7 +12,8 @@ window.SITE = {
     { label: "SWDB databook",            url: "https://allenswdb.github.io/" },
     { label: "MICrONS Explorer",         url: "https://www.microns-explorer.org/" },
     { label: "CAVEclient documentation", url: "https://caveconnectome.github.io/CAVEclient/" },
-    { label: "AllenSDK documentation",   url: "https://allensdk.readthedocs.io/" },
+    { label: "NWB",                      url: "https://nwb.org/" },
+    { label: "AIND open data on S3",     url: "https://registry.opendata.aws/allen-nd-open-data/" },
   ],
   // the Community tab opens this in a new tab; clear it to drop the tab
   community: "https://community.brain-map.org/",
@@ -50,110 +51,101 @@ window.DATASETS = {
     ng: "https://spelunker.cave-explorer.org/#!middleauth+https://global.em.brain.allentech.org/nglstate/api/v1/6116368998989824",
   },
 
-  /* ── physiology ───────────────────────────────────────────────────
-     `access` names the entry point; `backend` the file format. Together
-     they are what a reader needs before opening anything.               */
-  vc2p: {
-    discipline: "physiology",
-    label: "Visual Coding 2P",
-    blurb: "Survey of activity in awake mouse visual cortex: six cortical areas, 14 transgenic lines, across layers, viewing passive visual stimuli.",
-    access: "BrainObservatoryCache",
-    backend: "NWB / HDF5",
-    stats: [
-      { v: "6", l: "visual areas" },
-      { v: "14", l: "transgenic lines" },
-      { v: "3", l: "sessions per container" },
-    ],
-  },
-  vcnp: {
-    discipline: "physiology",
-    label: "Visual Coding Neuropixels",
-    blurb: "Six Neuropixels probes recording spikes across cortex and thalamus during passive visual stimulation.",
-    access: "EcephysProjectCache",
-    backend: "NWB / HDF5",
-    stats: [
-      { v: "6", l: "probes per session" },
-      { v: "384", l: "channels per probe" },
-    ],
-  },
-  vbo: {
-    discipline: "physiology",
-    label: "Visual Behavior Ophys",
-    blurb: "Two-photon imaging of the same neurons across days while mice perform a visual change-detection task, with familiar and novel images.",
-    access: "VisualBehaviorOphysProjectCache",
-    backend: "NWB / HDF5",
-    stats: [
-      { n: 50482, l: "neurons" },
-      { n: 704, l: "imaging sessions" },
-      { v: "8", l: "planes per session", sub: "Multiscope" },
-    ],
-  },
-  vbn: {
-    discipline: "physiology",
-    label: "Visual Behavior Neuropixels",
-    blurb: "Up to six Neuropixels probes in cortex, hippocampus, thalamus and midbrain during the same change-detection task, with a passive replay block.",
-    access: "VisualBehaviorNeuropixelsProjectCache",
-    backend: "NWB / HDF5",
-    stats: [
-      { n: 200000, l: "units" },
-      { n: 153, l: "sessions" },
-      { v: "2", l: "image sets", sub: "G and H" },
-    ],
-  },
+  /* ── physiology ─────────────────────────────────────────────────
+     Everything here is an NWB file. `asset` names the exact object whose
+     structure the Tables view describes — read with
+     `aws s3 cp --no-sign-request s3://aind-open-data/<asset>/.zmetadata -`,
+     so anything shown there can be checked against the file itself.
+     The AllenSDK project caches are deliberately not represented: they are
+     being retired in favour of reading NWB directly.                     */
   v1dd_ophys: {
     discipline: "physiology",
     label: "V1 Deep Dive (2P)",
-    blurb: "The two-photon side of V1DD: a ~1 mm³ volume of V1 imaged column by column, in 4 mice. One mouse was then reconstructed in EM.",
+    blurb: "The two-photon side of V1DD: a ~1 mm³ volume of V1 imaged column by column in 4 mice. One mouse was then reconstructed in EM, which is what links this dataset to the connectomics side.",
     access: "NWBZarrIO",
     backend: "NWB / Zarr",
+    asset: "409828_2018-11-06_14-02-59_filtered_2026-04-09_04-59-00",
     stats: [
-      { v: "4", l: "mice", sub: "one also imaged in EM" },
-      { v: "5 × 5", l: "columns × volumes" },
-      { v: "6", l: "planes per volume", sub: "16 µm apart" },
+      { v: "6", l: "imaging planes", sub: "one volume, 16 µm apart" },
+      { n: 33214, l: "stimulus presentations", sub: "intervals/stimulus_table" },
+      { v: "11", l: "epochs", sub: "intervals/epochs" },
     ],
   },
   bci: {
     discipline: "physiology",
     label: "Brain Computer Interface",
-    blurb: "Layer 2/3 motor cortex imaged while a mouse drives a lickport with the activity of one conditioned neuron, with 2P photostimulation before and after.",
+    blurb: "Layer 2/3 of motor cortex imaged while a mouse drives a lickport with the activity of one conditioned neuron, with single-cell photostimulation before and after to measure what learning changed.",
     access: "NWBZarrIO",
     backend: "NWB / Zarr",
+    asset: "single-plane-ophys_731015_2025-01-10_18-06-31_processed_2025-08-03_20-39-09",
     stats: [
-      { v: "1", l: "conditioned neuron" },
-      { n: 500, l: "neurons per plane" },
-      { v: "10", l: "seconds per trial" },
+      { n: 1214, l: "segmented ROIs", sub: "one plane" },
+      { v: "65", l: "BCI trials" },
+      { n: 2567, l: "photostim trials" },
     ],
   },
   df: {
     discipline: "physiology",
     label: "Dynamic Foraging",
-    blurb: "Behaviour-only sessions of a two-choice probabilistic reward task with non-stationary reward probabilities, across training stages.",
+    blurb: "Behaviour-only sessions of a two-choice probabilistic reward task with non-stationary reward probabilities, spanning the training curriculum. The simplest NWB file here: no units, no imaging.",
     access: "NWBZarrIO",
     backend: "NWB / Zarr",
+    asset: "behavior_761433_2025-03-27_08-51-54_processed_2025-03-28_05-00-28",
     stats: [
-      { n: 400, l: "sessions", sub: "behaviour only" },
-      { v: "2", l: "choices" },
+      { v: "1", l: "table", sub: "intervals/trials" },
+      { v: "4", l: "acquisition series", sub: "licks and rewards" },
+      { n: 400, l: "sessions released" },
     ],
   },
   npultra: {
     discipline: "physiology",
     label: "NP Ultra & Psychedelics",
-    blurb: "Ultra-high-density Neuropixels across cortical depth, probing how psilocybin changes population activity.",
+    blurb: "Ultra-high-density Neuropixels spanning cortical depth, probing how psilocybin changes population activity. The 6 µm site pitch is what makes the fine waveform measures possible.",
     access: "NWBZarrIO",
     backend: "NWB / Zarr",
+    asset: "ecephys_714527_2024-05-15_13-00-23_nwb_2025-08-03_21-11-22",
     stats: [
-      { v: "6", l: "µm site pitch" },
-      { v: "192 × 2", l: "channel configuration" },
+      { n: 719, l: "units", sub: "556 curated" },
+      { n: 1536, l: "electrodes", sub: "4 probes" },
+      { n: 6969, l: "visual presentations" },
+    ],
+  },
+  dr: {
+    discipline: "physiology",
+    label: "Dynamic Routing",
+    blurb: "Brain-wide Neuropixels recordings while mice perform a context-dependent go/no-go task: visual and auditory blocks alternate, and the same stimulus is a target or not depending on which block it is.",
+    access: "NWBZarrIO",
+    backend: "NWB / Zarr",
+    asset: "ecephys_713655_2024-08-09_10-41-47_nwb_2026-05-18_21-59-59",
+    stats: [
+      { n: 3577, l: "units", sub: "5 probes" },
+      { n: 1920, l: "electrodes" },
+      { v: "515", l: "trials", sub: "in 6 blocks" },
     ],
   },
   ctlut: {
     discipline: "physiology",
     label: "Cell Type Look-Up Table",
-    blurb: "Optotagged recordings in mouse striatum, built as ground truth for the responses of identified cell types.",
+    blurb: "Optotagged recordings built as ground truth for how identified cell types behave. Each unit carries the evidence for its own tagging call — latency, jitter and reliability per laser train.",
     access: "NWBZarrIO",
     backend: "NWB / Zarr",
+    asset: "ecephys_655565_2023-03-31_14-47-36_nwb_2025-07-16_16-52-27",
     stats: [
-      { v: "opto", l: "tagged units" },
+      { v: "2", l: "probes", sub: "one emits the light" },
+      { v: "opto", l: "response per unit", sub: "latency · jitter · reliability" },
+    ],
+  },
+  microns_fn: {
+    discipline: "physiology",
+    label: "MICrONS (functional)",
+    blurb: "The functional side of MICrONS: two-photon responses from the same cortical volume that was later cut for EM. Unlike everything else here it is not packaged as NWB — the coregistration and the digital-twin tuning live in CAVE tables, and the scans are distributed through MICrONS Explorer.",
+    access: "CAVEclient",
+    backend: "CAVE tables + external scans",
+    ng: "https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4658335189041152",
+    stats: [
+      { n: 19181, l: "manually coregistered" },
+      { n: 83046, l: "automatically coregistered" },
+      { v: "2", l: "digital-twin tables" },
     ],
   },
 };

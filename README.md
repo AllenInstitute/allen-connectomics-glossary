@@ -1,9 +1,9 @@
 # Allen Glossary
 
 A searchable glossary and table reference for the Allen Institute datasets, across two
-disciplines — **connectomics** (MICrONS, V1DD) and **physiology** (Visual Coding, Visual
-Behavior, V1DD 2P, BCI, Dynamic Foraging, NP Ultra, CTLUT) — plus a printable cheat sheet
-built from the same content. Further reading is listed in the site footer and lives in `data/config.js`
+disciplines — **connectomics** (MICrONS, V1DD) and **physiology** (V1DD 2P, BCI, Dynamic
+Foraging, NP Ultra, Dynamic Routing, CTLUT, MICrONS functional) — plus a printable cheat
+sheet built from the same content. Further reading is listed in the site footer and lives in `data/config.js`
 under `SITE.references`; a definition that leans on one particular source carries its
 own link chip.
 
@@ -50,10 +50,17 @@ The two disciplines are shaped differently, and the view says so:
 
 - **Connectomics** lists CAVE annotation tables with **row counts**. Groups: raw,
   detection, classification, proofreading, coregistration, functional, analysis.
-- **Physiology** has no queryable database. A cache hands you manifest tables, or you
-  open an NWB file and read objects at known paths — so each entry carries the
-  **`access` expression** that gets you the object instead of a row count. Groups: find,
-  cells & units, quality, activity, stimulus, behavior, analysis.
+- **Physiology** has no queryable database — it is an NWB file, and every file has the
+  same top-level groups whatever the experiment was. The lanes *are* those groups:
+  `general`, `acquisition`, `stimulus`, `intervals`, `processing`, `units`, `analysis`.
+  Each entry carries the **`access` path** that gets you the object; counts, where shown,
+  are for one session.
+
+  Every physiology dataset names the **asset its structure was read from**, printed in
+  the view. Nothing there comes from prose — see
+  [AUDIT-physiology-tables.md](AUDIT-physiology-tables.md) for how the files were read
+  and what turned out to be surprising. The AllenSDK project caches are deliberately not
+  represented; the SDK is being retired in favour of reading NWB directly.
 
 The dataset control applies here, and lists the datasets of the active discipline.
 
@@ -96,6 +103,15 @@ disk. Edit the data, reload the page.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for exactly what to edit for a given change —
 fixing a definition, adding a term, adding a Neuroglancer link, adding an R snippet.
+
+## Illustrations
+
+147 of 249 terms have one, drawn on a `0 0 320 200` viewBox from `currentColor` and the
+anatomy variables so they work in light, dark and on paper. Most are schematic. The
+action potential is not: `scripts/hodgkin-huxley.py` integrates the 1952 equations with
+RK4 and `scripts/hodgkin-huxley-svg.py` renders the result, simplified with
+Douglas-Peucker so the shape survives and the file stays small. Peak +41 mV, undershoot
+−76 mV, about 1.2 ms wide — the trace is the simulation, not a drawing of one.
 
 ## Multi-sense entries
 
