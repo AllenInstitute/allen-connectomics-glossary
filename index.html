@@ -26,9 +26,23 @@
   <!-- what you are looking at: discipline first, then the view of it. The two
        rows are one control, and the highlight that links them says so. -->
   <div class="wrap scope">
-    <i class="scope-link" aria-hidden="true"></i>
-    <div class="scope-hl" data-row="disc" aria-hidden="true"></div>
-    <div class="scope-hl" data-row="view" aria-hidden="true"></div>
+    <!-- One liquid surface behind both rows. The two blobs are solid shapes;
+         the threshold filter is what makes them merge with a neck when they
+         come near, and stretch and snap when they do not. -->
+    <svg class="goo-defs" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="goo" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur"/>
+          <feColorMatrix in="blur" type="matrix" result="goo"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11"/>
+        </filter>
+      </defs>
+    </svg>
+    <div class="scope-goo" aria-hidden="true">
+      <i class="blob" data-row="disc"></i>
+      <i class="blob" data-row="view"></i>
+      <i class="blob bridge" data-row="bridge"></i>
+    </div>
 
     <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
 

@@ -116,47 +116,46 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
   text-transform:uppercase; color:var(--faint)}
 
 /* ── scope: discipline over view ─────────────────────────────────
-   Two rows, one control. A single highlight sits behind the selected pill in
-   each row and slides between them, and a link is drawn from one to the other,
-   so the current scope — Physiology › Tables — reads as one shape. Positions
-   come from JS as custom properties; everything here just transitions. */
+   Two rows, one control. Behind them sits a single liquid surface: two solid
+   blobs run through a blur-then-threshold filter, so when they come close the
+   blur fields overlap and resolve into one shape with a neck between them, and
+   when they move apart the neck thins and snaps. No outlines — the surface is
+   the whole signal. Geometry comes from a spring integrator in app.js, which
+   is what gives the overshoot; CSS here does no animating of its own. */
 .scope{position:relative; padding-top:.6rem; padding-bottom:.15rem}
-.scope > *{position:relative; z-index:1}
-.scope-hl, .scope-link{position:absolute; z-index:0; pointer-events:none}
-.scope-hl{left:0; top:0; height:var(--h, 0px); width:var(--w, 0px);
-  transform:translate(var(--x, 0px), var(--y, 0px));
-  background:var(--accent-soft); border:1px solid var(--accent); border-radius:99px;
-  opacity:var(--on, 0);
-  transition:transform .34s cubic-bezier(.22,.8,.24,1), width .34s cubic-bezier(.22,.8,.24,1),
-             height .34s cubic-bezier(.22,.8,.24,1), opacity .2s}
-.scope-hl[data-row="disc"]{background:none; border-color:var(--line-2)}
-/* one straight segment from the discipline pill down to the view tab. A rotated
-   box rather than an SVG path, because transform and width transition in every
-   browser and the `d` property does not. */
-.scope-link{left:0; top:0; height:1.5px; width:var(--len, 0px); border-radius:2px;
-  transform-origin:0 50%;
-  transform:translate(var(--x, 0px), var(--y, 0px)) rotate(var(--ang, 0deg));
-  background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 25%, transparent), var(--accent));
-  opacity:var(--on, 0);
-  transition:transform .34s cubic-bezier(.22,.8,.24,1), width .34s cubic-bezier(.22,.8,.24,1),
-             opacity .2s}
+.scope > .disc, .scope > .views{position:relative; z-index:1}
+.goo-defs{position:absolute; width:0; height:0; pointer-events:none}
+
+.scope-goo{position:absolute; inset:0; z-index:0; pointer-events:none;
+  filter:url(#goo); opacity:.17; color:var(--accent)}
+.scope-goo .blob{position:absolute; left:0; top:0; display:block;
+  width:var(--w, 0px); height:var(--h, 0px);
+  transform:translate3d(var(--x, 0px), var(--y, 0px), 0);
+  background:currentColor; border-radius:99px; opacity:var(--on, 0)}
+/* the ligament: a bar running between the two blobs, which the threshold fuses
+   into a neck with concave fillets. Thin enough that stretching it thins the
+   neck, as a liquid bridge would. */
+.scope-goo .bridge{transform-origin:0 50%;
+  transform:translate3d(var(--x, 0px), var(--y, 0px), 0) rotate(var(--ang, 0deg)) translateY(-50%)}
+@media (prefers-color-scheme: dark){ .scope-goo{opacity:.26} }
+:root[data-theme="dark"] .scope-goo{opacity:.26}
+:root[data-theme="light"] .scope-goo{opacity:.17}
 
 .disc{display:flex; align-items:center; gap:.2rem; flex-wrap:wrap}
 .discb{appearance:none; font:inherit; font-size:.74rem; cursor:pointer; color:var(--faint);
   background:none; border:0; padding:.2rem .7rem; border-radius:99px;
-  letter-spacing:.04em; text-transform:uppercase; transition:color .2s}
+  letter-spacing:.04em; text-transform:uppercase; transition:color .25s}
 .discb:hover{color:var(--ink)}
-.discb[aria-pressed="true"]{color:var(--ink); font-weight:600}
+.discb[aria-pressed="true"]{color:var(--accent-ink); font-weight:600}
 
-.views{display:flex; gap:.15rem; margin-top:.75rem}
+.views{display:flex; gap:.15rem; margin-top:.55rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
-  padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .2s}
+  padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .25s}
 .view:hover{color:var(--ink)}
 .view[aria-current="page"]{color:var(--accent-ink); font-weight:600}
 
-@media (prefers-reduced-motion: reduce){
-  .scope-hl, .scope-link path{transition:none}
-}
+/* the filter is expensive to composite while printing, and means nothing there */
+@media print{ .scope-goo{display:none} }
 /* leaves the site, so it is set apart from the tabs that switch views */
 a.view.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.25rem;
   margin-left:.35rem; padding-left:.9rem; border-left:1px solid var(--line); border-radius:0}
@@ -168,19 +167,10 @@ a.view.out span{font-size:.72em; opacity:.8}
 .theme:hover{color:var(--ink); border-color:var(--line-2)}
 
 .ctrlbar{display:flex; align-items:center; gap:.7rem 1rem; flex-wrap:wrap; padding-bottom:.7rem}
-.ds,.sort,.disc{display:flex; align-items:center; gap:.2rem}
+.ds,.sort{display:flex; align-items:center; gap:.2rem}
 /* the dataset row can reach nine pills in physiology, so let it wrap */
 .ds{flex-wrap:wrap; gap:.2rem .25rem}
 
-/* discipline is the top-level lens: heavier than the dataset pills, quieter
-   than the view tabs it sits under */
-.disc{padding-right:.85rem; border-right:1px solid var(--line)}
-.discb{appearance:none; font:inherit; font-size:.74rem; cursor:pointer; color:var(--muted);
-  background:none; border:1px solid transparent; padding:.24rem .62rem; border-radius:99px;
-  letter-spacing:.01em}
-.discb:hover{color:var(--ink); background:var(--panel)}
-.discb[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent);
-  color:var(--accent-ink); font-weight:600}
 .sort .lab{font-family:var(--mono); font-size:.6rem; letter-spacing:.11em; text-transform:uppercase;
   color:var(--faint); margin-right:.2rem}
 .dsb,.sb{appearance:none; font:inherit; font-size:.78rem; cursor:pointer; color:var(--muted);
@@ -503,9 +493,23 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   <!-- what you are looking at: discipline first, then the view of it. The two
        rows are one control, and the highlight that links them says so. -->
   <div class="wrap scope">
-    <i class="scope-link" aria-hidden="true"></i>
-    <div class="scope-hl" data-row="disc" aria-hidden="true"></div>
-    <div class="scope-hl" data-row="view" aria-hidden="true"></div>
+    <!-- One liquid surface behind both rows. The two blobs are solid shapes;
+         the threshold filter is what makes them merge with a neck when they
+         come near, and stretch and snap when they do not. -->
+    <svg class="goo-defs" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="goo" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur"/>
+          <feColorMatrix in="blur" type="matrix" result="goo"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11"/>
+        </filter>
+      </defs>
+    </svg>
+    <div class="scope-goo" aria-hidden="true">
+      <i class="blob" data-row="disc"></i>
+      <i class="blob" data-row="view"></i>
+      <i class="blob bridge" data-row="bridge"></i>
+    </div>
 
     <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
 
@@ -2212,38 +2216,96 @@ function renderDsPills(){
   sel.value = S.sheetDs;
 }
 
-/* Place the two highlights and the line joining them. Everything is measured
-   from the live layout, so it survives wrapping, resizing and font swaps; the
-   transitions in the stylesheet do the animating. */
+/* ── the liquid scope indicator ───────────────────────────────────
+   Each blob has four springs — x, y, width, height — integrated per frame.
+   Underdamped, so a blob overshoots its target slightly and settles back:
+   that is what makes the surface read as viscous rather than as a box being
+   moved. Because the two blobs are inside a blur-then-threshold filter, a
+   blob in flight also stretches the neck joining it to its neighbour, and
+   snaps it once they are far enough apart. */
+// ~15% overshoot, settled in about half a second: enough elasticity to read as
+// liquid, not so much that the control keeps wobbling after you have moved on
+const SPRING = { k: 0.26, damp: 0.62, eps: 0.05 };
+
+const blobs = new Map();   // element -> {x,y,w,h} current + velocities
+let springFrame = null;
+
+function blobState(el){
+  if (!blobs.has(el)) blobs.set(el, { v: {}, cur: {}, target: {}, settled: false });
+  return blobs.get(el);
+}
+
+function step(){
+  springFrame = null;
+  let moving = false;
+
+  for (const [el, s] of blobs){
+    for (const key of ["x", "y", "w", "h"]){
+      const target = s.target[key];
+      if (target == null) continue;
+      if (s.cur[key] == null){ s.cur[key] = target; s.v[key] = 0; }   // first placement: no flight
+      const dx = target - s.cur[key];
+      s.v[key] = (s.v[key] + dx * SPRING.k) * SPRING.damp;
+      s.cur[key] += s.v[key];
+      if (Math.abs(dx) > SPRING.eps || Math.abs(s.v[key]) > SPRING.eps) moving = true;
+      else { s.cur[key] = target; s.v[key] = 0; }
+    }
+    el.style.setProperty("--x", s.cur.x + "px");
+    el.style.setProperty("--y", s.cur.y + "px");
+    el.style.setProperty("--w", s.cur.w + "px");
+    el.style.setProperty("--h", s.cur.h + "px");
+  }
+
+  if (moving) springFrame = requestAnimationFrame(step);
+}
+
+// Measured from the live layout, so it survives wrapping, resizing, font swaps.
 function placeScope(){
   const scope = $(".scope");
   if (!scope) return;
   const base = scope.getBoundingClientRect();
+  const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
   const put = (el, target, padX, padY) => {
     if (!el) return null;
     if (!target){ el.style.setProperty("--on", "0"); return null; }
     const r = target.getBoundingClientRect();
-    const x = r.left - base.left - padX, y = r.top - base.top - padY;
-    el.style.setProperty("--x", x + "px");
-    el.style.setProperty("--y", y + "px");
-    el.style.setProperty("--w", (r.width + padX * 2) + "px");
-    el.style.setProperty("--h", (r.height + padY * 2) + "px");
+    if (!r.width){ el.style.setProperty("--on", "0"); return null; }   // hidden, e.g. in jsdom
+    const s = blobState(el);
+    s.target = { x: r.left - base.left - padX, y: r.top - base.top - padY,
+                 w: r.width + padX * 2, h: r.height + padY * 2 };
+    if (still) s.cur = { ...s.target };
     el.style.setProperty("--on", "1");
-    return { cx: x + (r.width + padX * 2) / 2, top: y, bottom: y + r.height + padY * 2 };
+    return s.target;
   };
 
-  const d = put($('.scope-hl[data-row="disc"]'), $('.discb[aria-pressed="true"]'), 6, 3);
-  const v = put($('.scope-hl[data-row="view"]'), $('button.view[aria-current="page"]'), 2, 2);
+  const d = put($('.blob[data-row="disc"]'), $('.discb[aria-pressed="true"]'), 7, 4);
+  const v = put($('.blob[data-row="view"]'), $('button.view[aria-current="page"]'), 5, 4);
 
-  const link = $(".scope-link");
-  if (!link) return;
-  if (!d || !v){ link.style.setProperty("--on", "0"); return; }
-  const dx = v.cx - d.cx, dy = v.top - d.bottom;
-  link.style.setProperty("--x", d.cx + "px");
-  link.style.setProperty("--y", d.bottom + "px");
-  link.style.setProperty("--len", Math.hypot(dx, dy) + "px");
-  link.style.setProperty("--ang", (Math.atan2(dy, dx) * 180 / Math.PI) + "deg");
-  link.style.setProperty("--on", dy > 1 ? "1" : "0");
+  // the ligament runs centre to centre; the two blobs cover its ends, so what
+  // shows is the neck between them
+  const bridge = $(".blob.bridge");
+  if (bridge){
+    if (!d || !v){ bridge.style.setProperty("--on", "0"); }
+    else {
+      const from = { x: d.x + d.w / 2, y: d.y + d.h / 2 };
+      const to   = { x: v.x + v.w / 2, y: v.y + v.h / 2 };
+      const dx = to.x - from.x, dy = to.y - from.y;
+      const len = Math.hypot(dx, dy);
+      // a real bridge thins as it is drawn out: short span, fat neck; long span,
+      // a strand under tension that the threshold nearly erases
+      const h = Math.max(7, Math.min(17, 20 - len / 26));
+      const s = blobState(bridge);
+      s.target = { x: from.x, y: from.y, w: len, h };
+      s.targetAng = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (still) s.cur = { ...s.target };
+      bridge.style.setProperty("--ang", s.targetAng + "deg");
+      bridge.style.setProperty("--on", "1");
+    }
+  }
+
+  if (still) step();
+  else if (!springFrame) springFrame = requestAnimationFrame(step);
 }
 
 function render(){

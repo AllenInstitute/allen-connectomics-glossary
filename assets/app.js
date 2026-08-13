@@ -470,38 +470,96 @@ function renderDsPills(){
   sel.value = S.sheetDs;
 }
 
-/* Place the two highlights and the line joining them. Everything is measured
-   from the live layout, so it survives wrapping, resizing and font swaps; the
-   transitions in the stylesheet do the animating. */
+/* ── the liquid scope indicator ───────────────────────────────────
+   Each blob has four springs — x, y, width, height — integrated per frame.
+   Underdamped, so a blob overshoots its target slightly and settles back:
+   that is what makes the surface read as viscous rather than as a box being
+   moved. Because the two blobs are inside a blur-then-threshold filter, a
+   blob in flight also stretches the neck joining it to its neighbour, and
+   snaps it once they are far enough apart. */
+// ~15% overshoot, settled in about half a second: enough elasticity to read as
+// liquid, not so much that the control keeps wobbling after you have moved on
+const SPRING = { k: 0.26, damp: 0.62, eps: 0.05 };
+
+const blobs = new Map();   // element -> {x,y,w,h} current + velocities
+let springFrame = null;
+
+function blobState(el){
+  if (!blobs.has(el)) blobs.set(el, { v: {}, cur: {}, target: {}, settled: false });
+  return blobs.get(el);
+}
+
+function step(){
+  springFrame = null;
+  let moving = false;
+
+  for (const [el, s] of blobs){
+    for (const key of ["x", "y", "w", "h"]){
+      const target = s.target[key];
+      if (target == null) continue;
+      if (s.cur[key] == null){ s.cur[key] = target; s.v[key] = 0; }   // first placement: no flight
+      const dx = target - s.cur[key];
+      s.v[key] = (s.v[key] + dx * SPRING.k) * SPRING.damp;
+      s.cur[key] += s.v[key];
+      if (Math.abs(dx) > SPRING.eps || Math.abs(s.v[key]) > SPRING.eps) moving = true;
+      else { s.cur[key] = target; s.v[key] = 0; }
+    }
+    el.style.setProperty("--x", s.cur.x + "px");
+    el.style.setProperty("--y", s.cur.y + "px");
+    el.style.setProperty("--w", s.cur.w + "px");
+    el.style.setProperty("--h", s.cur.h + "px");
+  }
+
+  if (moving) springFrame = requestAnimationFrame(step);
+}
+
+// Measured from the live layout, so it survives wrapping, resizing, font swaps.
 function placeScope(){
   const scope = $(".scope");
   if (!scope) return;
   const base = scope.getBoundingClientRect();
+  const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
   const put = (el, target, padX, padY) => {
     if (!el) return null;
     if (!target){ el.style.setProperty("--on", "0"); return null; }
     const r = target.getBoundingClientRect();
-    const x = r.left - base.left - padX, y = r.top - base.top - padY;
-    el.style.setProperty("--x", x + "px");
-    el.style.setProperty("--y", y + "px");
-    el.style.setProperty("--w", (r.width + padX * 2) + "px");
-    el.style.setProperty("--h", (r.height + padY * 2) + "px");
+    if (!r.width){ el.style.setProperty("--on", "0"); return null; }   // hidden, e.g. in jsdom
+    const s = blobState(el);
+    s.target = { x: r.left - base.left - padX, y: r.top - base.top - padY,
+                 w: r.width + padX * 2, h: r.height + padY * 2 };
+    if (still) s.cur = { ...s.target };
     el.style.setProperty("--on", "1");
-    return { cx: x + (r.width + padX * 2) / 2, top: y, bottom: y + r.height + padY * 2 };
+    return s.target;
   };
 
-  const d = put($('.scope-hl[data-row="disc"]'), $('.discb[aria-pressed="true"]'), 6, 3);
-  const v = put($('.scope-hl[data-row="view"]'), $('button.view[aria-current="page"]'), 2, 2);
+  const d = put($('.blob[data-row="disc"]'), $('.discb[aria-pressed="true"]'), 7, 4);
+  const v = put($('.blob[data-row="view"]'), $('button.view[aria-current="page"]'), 5, 4);
 
-  const link = $(".scope-link");
-  if (!link) return;
-  if (!d || !v){ link.style.setProperty("--on", "0"); return; }
-  const dx = v.cx - d.cx, dy = v.top - d.bottom;
-  link.style.setProperty("--x", d.cx + "px");
-  link.style.setProperty("--y", d.bottom + "px");
-  link.style.setProperty("--len", Math.hypot(dx, dy) + "px");
-  link.style.setProperty("--ang", (Math.atan2(dy, dx) * 180 / Math.PI) + "deg");
-  link.style.setProperty("--on", dy > 1 ? "1" : "0");
+  // the ligament runs centre to centre; the two blobs cover its ends, so what
+  // shows is the neck between them
+  const bridge = $(".blob.bridge");
+  if (bridge){
+    if (!d || !v){ bridge.style.setProperty("--on", "0"); }
+    else {
+      const from = { x: d.x + d.w / 2, y: d.y + d.h / 2 };
+      const to   = { x: v.x + v.w / 2, y: v.y + v.h / 2 };
+      const dx = to.x - from.x, dy = to.y - from.y;
+      const len = Math.hypot(dx, dy);
+      // a real bridge thins as it is drawn out: short span, fat neck; long span,
+      // a strand under tension that the threshold nearly erases
+      const h = Math.max(7, Math.min(17, 20 - len / 26));
+      const s = blobState(bridge);
+      s.target = { x: from.x, y: from.y, w: len, h };
+      s.targetAng = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (still) s.cur = { ...s.target };
+      bridge.style.setProperty("--ang", s.targetAng + "deg");
+      bridge.style.setProperty("--on", "1");
+    }
+  }
+
+  if (still) step();
+  else if (!springFrame) springFrame = requestAnimationFrame(step);
 }
 
 function render(){

@@ -24,11 +24,18 @@ To refresh `dist/` after editing `data/`: `node scripts/bundle.mjs` (and
 
 ## Disciplines
 
-**All / Connectomics / Physiology** sits under the view tabs and scopes everything below
+**All / Connectomics / Physiology** sits above the view tabs and scopes everything below
 it: which terms are in the glossary, which categories the legend offers, which datasets
 the Tables view lists, and what the cheat sheet prints. A term inherits its discipline
 from its category, unless it declares its own — cell types belong to `both`, because a
 basket cell is the same cell however it was recorded.
+
+The two rows are one control, and the indicator behind them says so: two blobs and a
+ligament joining them, run through a blur-then-threshold SVG filter, so they fuse into a
+single surface when close and draw out into a thin strand when far apart. Geometry comes
+from a spring integrator in `app.js` — about 15% overshoot, settled in half a second —
+which is what makes it read as liquid rather than as a box being moved. It respects
+`prefers-reduced-motion` by snapping, and is hidden when printing.
 
 ## The three views
 
