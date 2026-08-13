@@ -490,8 +490,12 @@ const SURFACE = 0.9;
    just reads as one shapeless blob and it wants thinning; when they are at
    opposite ends the threshold all but erases a thin strand, so it wants
    thickening. Anchored to the real geometry of this control: the closest pair
-   is ~36 px centre to centre, the widest ~190 px. */
-const NECK = { near: 36, far: 190, thin: 8.5, thick: 25 };
+   is ~36 px apart, the widest ~190 px.
+
+   `thick` is bounded by the gutter between the two rows, which is about 12 px.
+   A neck fatter than that cannot stay inside the gutter on a long span, so it
+   rides over the labels in between and the whole shape reads as a slab. */
+const NECK = { near: 36, far: 190, thin: 7, thick: 14 };
 
 const blobs = new Map();   // element -> {x,y,w,h} current + velocities
 let springFrame = null;
@@ -556,11 +560,11 @@ function placeScope(){
   if (bridge){
     if (!d || !v){ bridge.style.setProperty("--on", "0"); }
     else {
-      // edge to edge rather than centre to centre: a thick neck drawn between
-      // the centres sweeps outside the control at a shallow angle, where this
-      // one stays in the band between the two rows
-      const from = { x: d.x + d.w / 2, y: d.y + d.h * 0.72 };
-      const to   = { x: v.x + v.w / 2, y: v.y + v.h * 0.28 };
+      // bottom edge to top edge, so on a long span the neck runs along the
+      // gutter between the rows instead of cutting across the labels. The ends
+      // still sit inside the blobs, which is what makes them fuse.
+      const from = { x: d.x + d.w / 2, y: d.y + d.h };
+      const to   = { x: v.x + v.w / 2, y: v.y };
       const dx = to.x - from.x, dy = to.y - from.y;
       const len = Math.hypot(dx, dy);
       const t = Math.max(0, Math.min(1, (len - NECK.near) / (NECK.far - NECK.near)));

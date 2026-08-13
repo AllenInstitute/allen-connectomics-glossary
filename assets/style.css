@@ -129,8 +129,12 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* the ligament: a bar running between the two blobs, which the threshold fuses
    into a neck with concave fillets. Thin enough that stretching it thins the
    neck, as a liquid bridge would. */
-.scope-goo .bridge{transform-origin:0 50%;
-  transform:translate3d(var(--x, 0px), var(--y, 0px), 0) rotate(var(--ang, 0deg)) translateY(-50%)}
+/* Centred on its own left edge by margin, not by a translate after the rotate:
+   a translate in the rotated frame displaces the bar perpendicular to itself,
+   which lifts a rightward span and drops a leftward one, so mirrored selections
+   did not produce mirrored shapes. */
+.scope-goo .bridge{transform-origin:0 50%; margin-top:calc(var(--h, 0px) / -2);
+  transform:translate3d(var(--x, 0px), var(--y, 0px), 0) rotate(var(--ang, 0deg))}
 @media (prefers-color-scheme: dark){ .scope-goo{opacity:.26} }
 :root[data-theme="dark"] .scope-goo{opacity:.26}
 :root[data-theme="light"] .scope-goo{opacity:.17}
