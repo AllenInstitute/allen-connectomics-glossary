@@ -149,12 +149,29 @@ Douglas-Peucker so the shape survives and the file stays small. Peak +41 mV, und
 
 ## The mouse
 
-Roughly two times in five, when the views row opens, a mouse runs across it and
-disappears at the bottom edge of the scope — which is where the search field begins, so
-it reads as having gone behind it. The path is a fresh cubic Bézier each time: which side
-it enters from, how it bends, how fast it goes. It is drawn top-down, so it is symmetric
-about its long axis and can simply be rotated onto the tangent whichever way it is
-heading. `MOUSE_CHANCE` in `assets/app.js` is the dial; reduced motion turns it off.
+Three times in five, when the views row opens, a mouse runs across it and disappears at
+the bottom edge of the scope — which is where the search field begins, so it reads as
+having gone behind it. The path is a fresh cubic Bézier each time: which side it enters
+from, how it bends, where it exits. It is drawn top-down, so it is symmetric about its
+long axis and can simply be rotated onto the tangent whichever way it is heading.
+
+How it crosses is a **motif**, drawn at random from four:
+
+| | |
+|---|---|
+| `run` | straight across, 1.4–1.9 s |
+| `run-stop-run` | freezes half way and sniffs, 1.9–2.4 s |
+| `run-explore-run` | slows to cast about, then bolts, 2.0–2.6 s |
+| `walk-explore-run` | ambles in, has a look, then bolts, 2.6–3.7 s |
+
+A motif is a list of segments, each covering some fraction of the path over some time; a
+segment covering no distance is the animal stopping. Speed is written as path per second,
+so a slow segment simply takes longer rather than being a different kind of motion, and
+running segments ease in and out — decelerating into a pause and accelerating out of one
+is what sells it as an animal deciding to stop. Each gait has its own sway and stride,
+read against elapsed time so the rhythm holds when a segment is stretched.
+
+`MOUSE_CHANCE` in `assets/app.js` is the dial; reduced motion turns it off.
 
 ## Multi-sense entries
 
