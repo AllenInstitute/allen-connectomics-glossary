@@ -492,6 +492,99 @@ function startBrand(){
   img.src = window.BRAND.mark;
 }
 
+/* ── suggest a change ─────────────────────────────────────────────
+   One dialog, filled differently depending on which view asked for it. It
+   never posts anything: it assembles a GitHub issue and hands it over
+   prefilled, so the reader stays in control of what is actually filed and
+   under whose name. */
+const SUGGEST = {
+  glossary: {
+    lead: "For a definition, an illustration, or a term that is missing. It opens a prefilled issue — you can edit anything before filing it.",
+    noun: "card",
+    nameLabel: "Card name",
+    namePlaceholder: "the term, as it appears on the card",
+    kinds: [["add", "Suggest a new card"], ["change", "Suggest to change a card"], ["remove", "Suggest to remove a card"]],
+  },
+  tables: {
+    lead: "For an entry in a dataset's catalogue: a wrong path, a missing table, a description that no longer matches the file.",
+    noun: "entry",
+    nameLabel: "Entry name or path",
+    namePlaceholder: "e.g. nucleus_detection_v0, or intervals/trials",
+    kinds: [["add", "Suggest a new entry"], ["change", "Suggest to change an entry"], ["remove", "Suggest to remove an entry"]],
+    extra: () => `Dataset: ${S.ds === "all" ? "(all)" : (DS[S.ds] || {}).label || S.ds}`,
+  },
+};
+
+function openSuggest(which){
+  const dlg = $("#suggestDlg"), cfg = SUGGEST[which];
+  if (!dlg || !cfg || !dlg.showModal) return;
+  dlg.dataset.which = which;
+  $("#suggestTitle").textContent = "Suggest a change";
+  $("#suggestLead").textContent = cfg.lead;
+  $("#sgNameLabel").textContent = cfg.nameLabel;
+  $("#sgName").placeholder = cfg.namePlaceholder;
+  $("#sgKind").innerHTML = cfg.kinds
+    .map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("");
+  syncSuggest();
+  dlg.showModal();
+  $("#sgKind").focus();
+}
+
+// the description is only optional when the card does not exist yet
+function syncSuggest(){
+  const kind = $("#sgKind").value;
+  const need = kind !== "remove";
+  $("#sgDesc").closest(".fld").hidden = kind === "remove";
+  $("#sgDescHint").textContent = kind === "add" ? "required — what should it say?"
+                                                : "optional — leave blank to describe it below";
+  $("#sgDesc").required = kind === "add";
+  return need;
+}
+
+function suggestIssue(){
+  const dlg = $("#suggestDlg"), which = dlg.dataset.which, cfg = SUGGEST[which];
+  const repo = window.SITE.repo;
+  if (!repo) return;
+
+  const kind = $("#sgKind").value;
+  const name = $("#sgName").value.trim();
+  if (!name){ $("#sgName").reportValidity(); return; }
+  const desc = $("#sgDesc").value.trim();
+  if ($("#sgDesc").required && !desc){ $("#sgDesc").reportValidity(); return; }
+
+  const why = $("#sgWhy").value.trim();
+  const file = ($("#sgArt").files || [])[0];
+  const verb = { add: "Add", change: "Change", remove: "Remove" }[kind];
+
+  /* Blocks joined by blank lines, and the facts as a list. Markdown folds
+     consecutive lines into one paragraph, and a bare `---` under a line of text
+     turns that line into a heading — both of which this hit before it was
+     assembled this way. */
+  const facts = [
+    `- **Request** — ${verb} a ${cfg.noun}`,
+    `- **${cfg.nameLabel}** — ${name}`,
+    cfg.extra ? `- **${cfg.extra()}**` : null,
+  ].filter(Boolean).join("\n");
+
+  const body = [
+    facts,
+    desc ? `### Proposed text\n\n${desc}` : null,
+    why ? `### Further explanation\n\n_Context for reviewers; not published on the site._\n\n${why}` : null,
+    file ? `### Illustration\n\n\`${file.name}\` — **please attach this file to the issue before submitting.**` : null,
+    "---",
+    `Filed from the ${which} view of the Allen Glossary` +
+      (which === "glossary" ? ` · discipline: ${S.disc}` : ""),
+  ].filter(Boolean).join("\n\n");
+
+  const url = `https://github.com/${repo}/issues/new`
+    + `?title=${encodeURIComponent(`[${which}] ${verb}: ${name}`)}`
+    + `&body=${encodeURIComponent(body)}`;
+
+  window.open(url, "_blank", "noopener");
+  dlg.close();
+  $("#suggestForm").reset();
+}
+
 /* ── view plumbing ───────────────────────────────────────────── */
 
 /* Deep links. #/tables and #/sheet open a view; #term-<id> opens the glossary at
@@ -1058,6 +1151,14 @@ function init(){
   let rz = null;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(placeScope, 80); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeScope);
+
+  // suggestion dialog: one per view, or none at all if no repo is configured
+  $$(".suggest").forEach(b => {
+    if (!window.SITE.repo){ b.remove(); return; }
+    b.onclick = () => openSuggest(b.dataset.suggest);
+  });
+  if ($("#sgKind")) $("#sgKind").onchange = syncSuggest;
+  if ($("#sgGo")) $("#sgGo").onclick = suggestIssue;
 
   scheduleBall();
   document.addEventListener("visibilitychange", () => {

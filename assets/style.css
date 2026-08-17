@@ -197,6 +197,53 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 :root[data-theme="dark"]{ --gold:#e6c25c }
 :root[data-theme="light"]{ --gold:#c8912a }
 
+/* ── suggest a change ───────────────────────────────────────────
+   The trigger sits above the content it is about, right-aligned so it reads as
+   an action on the pane rather than part of the pane. */
+.pane-head{display:flex; justify-content:flex-end; margin:.1rem 0 .35rem}
+.suggest{appearance:none; font:inherit; font-size:.74rem; cursor:pointer;
+  color:var(--muted); background:var(--card); border:1px solid var(--line);
+  padding:.28rem .75rem; border-radius:99px; transition:color .2s, border-color .2s}
+.suggest:hover{color:var(--accent-ink); border-color:var(--accent)}
+
+/* the dialog is styled from the same tokens as the page, so it reads as part of
+   it rather than as the browser's idea of a form */
+.dlg{border:0; padding:0; background:none; max-width:min(560px, calc(100vw - 2rem)); width:100%}
+.dlg::backdrop{background:color-mix(in srgb, var(--ink) 42%, transparent);
+  backdrop-filter:saturate(120%) blur(2px)}
+.dlg form{background:var(--card); color:var(--ink); border:1px solid var(--line);
+  border-radius:var(--r); box-shadow:var(--shadow); padding:1.1rem 1.2rem 1rem;
+  display:grid; gap:.75rem; max-height:min(86vh, 900px); overflow:auto}
+.dlg header{display:flex; align-items:baseline; gap:1rem}
+.dlg h2{margin:0; font-size:1rem; letter-spacing:-.01em}
+.dlg-x{margin-left:auto; appearance:none; border:0; background:none; cursor:pointer;
+  font-size:1.15rem; line-height:1; color:var(--faint); padding:.1rem .3rem}
+.dlg-x:hover{color:var(--ink)}
+.dlg-lead{margin:0; font-size:.8rem; color:var(--muted); line-height:1.45; max-width:62ch}
+
+.fld{display:grid; gap:.25rem}
+.fld[hidden]{display:none !important}
+.fld-l{font-family:var(--mono); font-size:.62rem; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--faint)}
+.fld-l em{font-style:normal; text-transform:none; letter-spacing:0; font-family:var(--sans);
+  font-size:1.05em; color:var(--faint); opacity:.85}
+.fld input[type=text], .fld textarea, .fld select{
+  font:inherit; font-size:.85rem; color:var(--ink); background:var(--paper);
+  border:1px solid var(--line); border-radius:6px; padding:.42rem .6rem; width:100%}
+.fld textarea{resize:vertical; line-height:1.45}
+.fld input:focus, .fld textarea:focus, .fld select:focus{outline:2px solid var(--accent);
+  outline-offset:1px; border-color:transparent}
+.fld input[type=file]{font-size:.78rem; color:var(--muted)}
+.fld-note{font-size:.7rem; color:var(--faint); line-height:1.4}
+
+.dlg footer{display:grid; gap:.6rem; border-top:1px solid var(--line); padding-top:.7rem}
+.dlg-note{margin:0; font-size:.7rem; color:var(--faint); line-height:1.45}
+.dlg-btns{display:flex; gap:.4rem; justify-content:flex-end}
+.btn.ghost{background:none; border:1px solid var(--line); color:var(--muted)}
+.btn.ghost:hover{color:var(--ink); border-color:var(--line-2)}
+
+@media print{ .pane-head, .dlg{display:none !important} }
+
 /* the filter is expensive to composite while printing, and means nothing there */
 @media print{ .scope-goo, .scope-mouse{display:none} }
 /* Leaves the site, so it sits in the title bar with the theme switch rather

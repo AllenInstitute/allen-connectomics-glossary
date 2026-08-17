@@ -17,6 +17,9 @@ window.SITE = {
   ],
   // the Community tab opens this in a new tab; clear it to drop the tab
   community: "https://community.brain-map.org/",
+  // where "Suggest a change" files its issue. owner/name of the repository the
+  // reader should be able to open an issue on; clear it to drop the button.
+  repo: "lappalainenj/allen-glossary",
 };
 
 // The top-level lens. Everything below — categories, datasets, table groups —

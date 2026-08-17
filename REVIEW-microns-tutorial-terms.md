@@ -34,7 +34,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -48,7 +48,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high — currently only implicit inside synapse_target_predictions_ssa
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -62,7 +62,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -76,7 +76,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -90,7 +90,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -104,7 +104,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high — note this collides with the existing ROI mask term; consider `senses`
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -118,7 +118,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -132,7 +132,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -146,7 +146,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — medium — the tutorial names it but does not expand HKS
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -163,7 +163,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -177,7 +177,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -191,7 +191,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -205,7 +205,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [ ] accept  - [x] reword  - [ ] drop
 
 ---
 
@@ -219,7 +219,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high — newest release adds it; distinct from existing 'mtypes'
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -233,7 +233,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 
@@ -247,7 +247,7 @@ I re-ran the already-covered test myself rather than taking it on trust: every c
 
 **Confidence** — high — mirrors the existing 'Excitatory/Inhibitory V1 cell types' grouped entries
 
-- [ ] accept  - [ ] reword  - [ ] drop
+- [x] accept  - [ ] reword  - [ ] drop
 
 ---
 

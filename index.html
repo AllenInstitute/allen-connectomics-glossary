@@ -87,6 +87,9 @@
 
   <!-- ── glossary ─────────────────────────────────────────────── -->
   <section id="view-glossary" class="view-pane">
+    <div class="pane-head">
+      <button class="suggest" type="button" data-suggest="glossary">Suggest a change</button>
+    </div>
     <div class="legends">
       <details class="legend" open>
         <summary>Category <span class="hint">— the colour on a card's edge. Click to filter.</span></summary>
@@ -106,6 +109,9 @@
 
   <!-- ── tables ───────────────────────────────────────────────── -->
   <section id="view-tables" class="view-pane" hidden>
+    <div class="pane-head">
+      <button class="suggest" type="button" data-suggest="tables">Suggest a change</button>
+    </div>
     <div id="tablesOut"></div>
     <section class="snips">
       <h2 class="sec-h">Recipes</h2>
@@ -140,6 +146,53 @@
   </section>
 
 </main>
+
+<dialog id="suggestDlg" class="dlg" aria-labelledby="suggestTitle">
+  <form method="dialog" id="suggestForm">
+    <header>
+      <h2 id="suggestTitle">Suggest a change</h2>
+      <button class="dlg-x" type="submit" value="cancel" aria-label="Close">×</button>
+    </header>
+
+    <p class="dlg-lead" id="suggestLead"></p>
+
+    <label class="fld">
+      <span class="fld-l">Change request type</span>
+      <select id="sgKind"></select>
+    </label>
+
+    <label class="fld">
+      <span class="fld-l" id="sgNameLabel">Card name</span>
+      <input type="text" id="sgName" autocomplete="off" spellcheck="false" required>
+    </label>
+
+    <label class="fld">
+      <span class="fld-l">Description <em id="sgDescHint"></em></span>
+      <textarea id="sgDesc" rows="3"></textarea>
+    </label>
+
+    <label class="fld">
+      <span class="fld-l">Further explanation <em>will not be published on the site</em></span>
+      <textarea id="sgWhy" rows="3"></textarea>
+    </label>
+
+    <label class="fld">
+      <span class="fld-l">Illustration <em>SVG, PNG or JPG</em></span>
+      <input type="file" id="sgArt" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg">
+      <span class="fld-note">The file cannot travel with the link — pick it here and the issue
+      will remind you to attach it before you submit.</span>
+    </label>
+
+    <footer>
+      <p class="dlg-note">Opens a prefilled issue on GitHub. Nothing is sent until you press
+      submit there, and you will need to be signed in.</p>
+      <div class="dlg-btns">
+        <button class="btn ghost" type="submit" value="cancel">Cancel</button>
+        <button class="btn" type="button" id="sgGo">Submit new issue ↗</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
 
 <footer class="foot no-print">
   <div class="wrap">

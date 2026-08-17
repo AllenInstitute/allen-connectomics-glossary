@@ -18,6 +18,22 @@ open the browser console (⌥⌘I / F12) and it will name the line.
 
 ## What to edit for what
 
+### Say general things generally
+
+The glossary is grounded in the Allen datasets but is not only about them. So:
+
+- A term that would appear in any neuroscience textbook — *astrocyte*, *dendritic spine*,
+  *action potential*, *chandelier cell* — is defined **without naming a dataset, a table
+  or a pipeline**. Someone arriving from another lab should be able to use it.
+- A term that only exists because of this data — `pcg_skel`, *multifeature cell types*,
+  `distance_to_root` — is named as such, and should be. Pretending it is general is worse
+  than admitting it is specific.
+- The test is not where you first met the word, but whether the definition would still be
+  true and useful somewhere else. "Sixty were proofread in the V1 column" is a fact about
+  a dataset, not about microglia.
+- Where a general term also has a local convention, that belongs in `senses` or on the
+  specific term, not smuggled into the general definition.
+
 ### Fix or reword a definition
 `data/terms.js`, the `def` field. Inline `<code>…</code>` is allowed and is how
 identifiers are marked up. So is `&amp;` for a literal ampersand.
@@ -36,7 +52,8 @@ Add an object to `data/terms.js`:
   discipline, and so which of All / Connectomics / Physiology it appears under.
 - `discipline` — **omit it** unless the category's default is wrong for this one term.
   `"both"` shows it under either discipline.
-- `datasets` — **omit it** if the term applies to both. Add `"datasets":["v1dd"]` only
+- `datasets` — **omit it** unless the term is genuinely specific to one. A general term
+  should carry no dataset at all. Add `"datasets":["v1dd"]` only
   when a term is genuinely specific to one.
 - `flags` — `"ambiguous"` marks a word that means different things in different places
   (it gets a ⚠). `"context"` marks an adjacent technique that these datasets do not
