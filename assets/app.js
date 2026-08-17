@@ -302,7 +302,10 @@ function renderTables(){
     : `Each column collects the tables that record one kind of thing. Greyed entries are the underlying
        measurements and the products you assemble yourself; the rest are CAVE tables you can query.`;
   $("#tablesOut").innerHTML =
-    `<h2 class="sec-h">Tables at a glance</h2><p class="sec-p">${intro}</p>`
+    `<div class="sec-head-row"><h2 class="sec-h">Tables at a glance</h2>` +
+    (window.SITE.repo
+      ? `<button class="suggest" type="button" data-suggest="tables">Suggest a change</button>` : "") +
+    `</div><p class="sec-p">${intro}</p>`
     + (ids.length ? ids.map(datasetBlock).join("")
                   : `<p class="empty">No datasets in this discipline.</p>`);
   renderSnips();
@@ -503,7 +506,8 @@ const SUGGEST = {
     noun: "card",
     nameLabel: "Card name",
     namePlaceholder: "the term, as it appears on the card",
-    kinds: [["add", "Suggest a new card"], ["change", "Suggest to change a card"], ["remove", "Suggest to remove a card"]],
+    kinds: [["add", "Suggest a new card"], ["change", "Suggest to change a card"],
+            ["remove", "Suggest to remove a card"], ["other", "Something else"]],
     // a card cannot be filed without these, so the issue collects them rather
     // than sending someone back to ask
     fields: () => [
@@ -519,7 +523,8 @@ const SUGGEST = {
     noun: "entry",
     nameLabel: "Entry name or path",
     namePlaceholder: "e.g. nucleus_detection_v0, or intervals/trials",
-    kinds: [["add", "Suggest a new entry"], ["change", "Suggest to change an entry"], ["remove", "Suggest to remove an entry"]],
+    kinds: [["add", "Suggest a new entry"], ["change", "Suggest to change an entry"],
+            ["remove", "Suggest to remove an entry"], ["other", "Something else"]],
     fields: () => {
       const ids = Object.keys(DS).filter(id => inDisc(DS[id].discipline, S.disc));
       const disc = S.ds !== "all" && DS[S.ds] ? DS[S.ds].discipline : activeDiscs()[0];
@@ -558,15 +563,25 @@ function openSuggest(which){
   $("#sgKind").focus();
 }
 
-// the description is only optional when the card does not exist yet
+/* What is required depends on what is being asked. A new card needs its text;
+   a removal does not; and "Something else" is the door for anything that does
+   not fit the other three, so it insists on nothing at all — the whole point is
+   that the reader should not have to force their thought into this shape. */
 function syncSuggest(){
+  const cfg = SUGGEST[$("#suggestDlg").dataset.which] || SUGGEST.glossary;
   const kind = $("#sgKind").value;
-  const need = kind !== "remove";
+  const other = kind === "other";
+
   $("#sgDesc").closest(".fld").hidden = kind === "remove";
-  $("#sgDescHint").textContent = kind === "add" ? "required — what should it say?"
-                                                : "optional — leave blank to describe it below";
   $("#sgDesc").required = kind === "add";
-  return need;
+  $("#sgDescHint").textContent =
+    kind === "add" ? "required — what should it say?"
+    : other        ? "optional"
+                   : "optional — leave blank to describe it below";
+
+  $("#sgName").required = !other;
+  $("#sgNameLabel").innerHTML = esc(cfg.nameLabel) + (other ? " <em>optional</em>" : "");
+  $("#sgExtra").hidden = other;
 }
 
 function suggestIssue(){
@@ -575,26 +590,28 @@ function suggestIssue(){
   if (!repo) return;
 
   const kind = $("#sgKind").value;
+  const other = kind === "other";
   const name = $("#sgName").value.trim();
-  if (!name){ $("#sgName").reportValidity(); return; }
+  if (!name && !other){ $("#sgName").reportValidity(); return; }
   const desc = $("#sgDesc").value.trim();
   if ($("#sgDesc").required && !desc){ $("#sgDesc").reportValidity(); return; }
 
   const why = $("#sgWhy").value.trim();
   const file = ($("#sgArt").files || [])[0];
-  const verb = { add: "Add", change: "Change", remove: "Remove" }[kind];
+  const verb = { add: "Add", change: "Change", remove: "Remove", other: "Something else" }[kind];
   const article = /^[aeiou]/i.test(cfg.noun) ? "an" : "a";
+  const request = other ? "Something else" : `${verb} ${article} ${cfg.noun}`;
 
   /* Blocks joined by blank lines, and the facts as a list. Markdown folds
      consecutive lines into one paragraph, and a bare `---` under a line of text
      turns that line into a heading — both of which this hit before it was
      assembled this way. */
   const facts = [
-    `- **Request** — ${verb} ${article} ${cfg.noun}`,
-    `- **${cfg.nameLabel}** — ${name}`,
-    ...$$("#sgExtra select").filter(s => s.value)
-       .map(s => `- **${s.dataset.extra}** — ${s.value}`),
-  ].join("\n");
+    `- **Request** — ${request}`,
+    name ? `- **${cfg.nameLabel}** — ${name}` : null,
+    ...(other ? [] : $$("#sgExtra select").filter(s => s.value)
+                       .map(s => `- **${s.dataset.extra}** — ${s.value}`)),
+  ].filter(Boolean).join("\n");
 
   const body = [
     facts,
@@ -607,7 +624,7 @@ function suggestIssue(){
   ].filter(Boolean).join("\n\n");
 
   const url = `https://github.com/${repo}/issues/new`
-    + `?title=${encodeURIComponent(`[${which}] ${verb}: ${name}`)}`
+    + `?title=${encodeURIComponent(`[${which}] ${verb}${name ? ": " + name : ""}`)}`
     + `&body=${encodeURIComponent(body)}`;
 
   window.open(url, "_blank", "noopener");
@@ -1183,9 +1200,12 @@ function init(){
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeScope);
 
   // suggestion dialog: one per view, or none at all if no repo is configured
-  $$(".suggest").forEach(b => {
-    if (!window.SITE.repo){ b.remove(); return; }
-    b.onclick = () => openSuggest(b.dataset.suggest);
+  // the tables trigger is redrawn with its heading, so catch clicks by
+  // delegation rather than binding a node that will not survive a render
+  if (!window.SITE.repo) $$(".suggest").forEach(b => b.remove());
+  else document.addEventListener("click", e => {
+    const b = e.target.closest(".suggest");
+    if (b) openSuggest(b.dataset.suggest);
   });
   if ($("#sgKind")) $("#sgKind").onchange = syncSuggest;
   if ($("#sgGo")) $("#sgGo").onclick = suggestIssue;
