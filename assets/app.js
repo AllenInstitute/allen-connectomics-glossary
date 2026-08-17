@@ -531,15 +531,24 @@ function step(){
   if (moving) springFrame = requestAnimationFrame(step);
 }
 
-/* Row two collapses and reopens when row one changes, because what it lists has
-   just been rescoped. The surface follows it out of the live layout rather than
-   being told about it: with the row shut there is nothing to measure, so the
-   view blob shrinks into the discipline blob and the neck retracts with it. */
-const COLLAPSE = 190, REOPEN = 260;
-let pulseTimers = [];
+/* ── row two: shut until you reach for it ─────────────────────────
+   Hovering the scope opens it over a second; leaving the header closes it two
+   seconds later, over another second. The liquid surface is never told any of
+   this — it measures the live layout, so with the row shut there is nothing to
+   measure, the view blob shrinks into the discipline blob and the neck retracts
+   with it. A frame loop re-measures for as long as the height is moving, which
+   is what keeps the surface attached to a layout sliding underneath it. */
+const OPEN_MS = 1000, CLOSE_MS = 1000, CLOSE_DELAY = 2000;
+let viewsTimer = null, viewsSettle = null, viewsOpen = false;
 
 function reduceMotion(){
   return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+// no pointer to hover with, or motion turned down: the row stays open, and the
+// stylesheet already pins it there, so script should keep its hands off
+function viewsPinned(){
+  return reduceMotion() ||
+    !!(window.matchMedia && window.matchMedia("(hover: none)").matches);
 }
 
 // keep re-measuring while a CSS transition is moving the layout under us
@@ -549,33 +558,50 @@ function trackScope(ms){
   requestAnimationFrame(tick);
 }
 
-function pulseViews(){
-  const wrap = $("#viewsWrap");
-  if (!wrap || reduceMotion()) return;
-
-  pulseTimers.forEach(clearTimeout);
-  pulseTimers = [];
-
-  // measure the wrapper, not the nav inside it: the nav's top margin belongs to
-  // the wrapper's height, and animating to the nav's height alone leaves a snap
-  // at the end when the height goes back to auto
-  wrap.style.height = "";
+/* Measured on the wrapper, not on the nav inside it: the nav's top margin is
+   part of the wrapper's height, and animating to the nav's height alone leaves
+   the row snapping the difference when it goes back to auto. */
+function viewsHeight(wrap){
+  const before = wrap.style.height;
+  wrap.style.height = "auto";
   const h = wrap.getBoundingClientRect().height;
-  if (!h) return;                       // never measured, e.g. in a test DOM
+  wrap.style.height = before;
+  return h;
+}
 
-  wrap.style.height = h + "px";
-  void wrap.offsetHeight;               // commit that height before changing it
-  wrap.classList.add("collapsed");
-  wrap.style.height = "0px";
-  trackScope(COLLAPSE);
+function setViews(open){
+  const wrap = $("#viewsWrap");
+  if (!wrap || viewsPinned() || open === viewsOpen) return;
 
-  pulseTimers.push(setTimeout(() => {
-    wrap.classList.remove("collapsed");
-    wrap.style.height = h + "px";
-    trackScope(REOPEN);
-    // back to auto once it is open, so the row can still wrap if it needs to
-    pulseTimers.push(setTimeout(() => { wrap.style.height = ""; placeScope(); }, REOPEN));
-  }, COLLAPSE));
+  const h = viewsHeight(wrap);
+  if (!h) return;               // nothing laid out yet, e.g. a test DOM. Bail
+                                // before recording the state, or the next call
+                                // sees it as already done and never runs.
+  viewsOpen = open;
+  clearTimeout(viewsSettle);
+
+  // start from wherever it actually is, so an interrupted animation reverses
+  // from that point instead of jumping to an end state first
+  wrap.style.height = wrap.getBoundingClientRect().height + "px";
+  void wrap.offsetHeight;
+  wrap.classList.toggle("open", open);
+  wrap.style.height = (open ? h : 0) + "px";
+
+  const ms = open ? OPEN_MS : CLOSE_MS;
+  trackScope(ms);
+  // Once open, let the row size itself again so the tabs can wrap. This has to
+  // be an explicit `auto` rather than clearing the inline height: the shut
+  // state is `height:0` in the stylesheet, so clearing it would snap the row
+  // straight back closed the moment it had finished opening.
+  if (open) viewsSettle = setTimeout(() => {
+    if (viewsOpen){ wrap.style.height = "auto"; placeScope(); }
+  }, ms);
+}
+
+function openViews(){ clearTimeout(viewsTimer); setViews(true); }
+function closeViewsSoon(){
+  clearTimeout(viewsTimer);
+  viewsTimer = setTimeout(() => setViews(false), CLOSE_DELAY);
 }
 
 // Measured from the live layout, so it survives wrapping, resizing, font swaps.
@@ -696,7 +722,7 @@ function init(){
     S.disc = b.dataset.disc;
     const live = new Set(visibleCats().map(c => c.id));
     S.cats = (S.cats || []).filter(c => live.has(c));
-    save(); render(); pulseViews();
+    save(); render();
   });
 
   // the pills are rebuilt whenever the discipline changes, so delegate
@@ -765,6 +791,22 @@ function init(){
   let rz = null;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(placeScope, 80); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeScope);
+
+  /* Reaching for the scope opens the views; leaving the header closes them a
+     little later. The delay is generous because the row is between the pointer
+     and the page, and a row that shuts while you are still travelling towards
+     it is worse than one that lingers. */
+  const scope = $(".scope"), bar = $(".topbar");
+  if (scope && bar){
+    scope.addEventListener("pointerenter", openViews);
+    bar.addEventListener("pointerleave", closeViewsSoon);
+    // keyboard users never fire pointerenter, and a focused control inside a
+    // zero-height box is a control nobody can see
+    scope.addEventListener("focusin", openViews);
+    scope.addEventListener("focusout", e => {
+      if (!scope.contains(e.relatedTarget)) closeViewsSoon();
+    });
+  }
 
   window.addEventListener("hashchange", () => {
     const was = S.view;

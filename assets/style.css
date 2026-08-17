@@ -147,11 +147,21 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .discb:hover{color:var(--ink)}
 .discb[aria-pressed="true"]{color:var(--accent-ink); font-weight:600}
 
-/* height is set in px by app.js so it can be animated; it returns to auto once
-   the row is open, so the layout still adapts if the tabs ever wrap */
-.views-wrap{overflow:hidden;
-  transition:height .26s cubic-bezier(.22,.8,.24,1), opacity .18s ease}
-.views-wrap.collapsed{opacity:0}
+/* Row two is shut until you reach for it. Height is set in px by app.js so it
+   can be animated at all — `auto` is not interpolable — and returns to auto once
+   the row has finished opening, so the tabs can still wrap if they need to.
+   The starting height lives here rather than in script so the row is never
+   briefly visible before the first frame. */
+.views-wrap{overflow:hidden; height:0; opacity:0;
+  transition:height 1s cubic-bezier(.22,.8,.24,1), opacity .7s ease}
+.views-wrap.open{opacity:1}
+
+/* Without hover there is nothing to reveal it with, and a row that can only be
+   opened by pointing is a row a touch user never sees. Same for anyone who has
+   asked for less motion: leave it open and still. */
+@media (hover: none), (prefers-reduced-motion: reduce){
+  .views-wrap{height:auto !important; opacity:1 !important; transition:none}
+}
 .views{display:flex; gap:.15rem; margin-top:.55rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .25s}

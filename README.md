@@ -32,8 +32,15 @@ basket cell is the same cell however it was recorded.
 
 Row one carries the scopes and the outbound **Community** link, which leaves the site
 and so belongs beside them rather than among the views of this one. Row two carries the
-views, and collapses and reopens whenever row one changes — what it lists has just been
-rescoped, and the surface retracts into the discipline blob and re-emerges with it.
+views and is **shut until you reach for it**: pointing at the scope opens it over a
+second, and leaving the header closes it again two seconds later. The liquid surface is
+never told about any of this — it measures the live layout, so with the row shut there is
+nothing to measure and the view blob retracts into the discipline blob, taking the neck
+with it.
+
+Keyboard focus opens the row too, since a focused control inside a zero-height box is one
+nobody can see. Where there is no pointer to hover with, and for anyone who has asked for
+less motion, the row is simply left open.
 
 The two rows are one control, and the indicator behind them says so: two blobs and a
 ligament joining them, run through a blur-then-threshold SVG filter, so they fuse into a
