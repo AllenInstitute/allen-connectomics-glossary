@@ -6,9 +6,12 @@ exactly like a layout bug.
 """
 import http.server
 import functools
+import pathlib
 import sys
 
-ROOT = "/Users/janne.lappalainen/Projects/allen-connectomics-glossary"
+# resolved from this file, so renaming the repo or moving the checkout costs
+# nothing
+ROOT = str(pathlib.Path(__file__).resolve().parent.parent)
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
 
 
