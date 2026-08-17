@@ -504,6 +504,15 @@ const SUGGEST = {
     nameLabel: "Card name",
     namePlaceholder: "the term, as it appears on the card",
     kinds: [["add", "Suggest a new card"], ["change", "Suggest to change a card"], ["remove", "Suggest to remove a card"]],
+    // a card cannot be filed without these, so the issue collects them rather
+    // than sending someone back to ask
+    fields: () => [
+      { id: "category", label: "Category",
+        options: CATS.map(c => [c.label, c.label]), value: null },
+      { id: "discipline", label: "Belongs to",
+        options: DISCS.map(d => [d.label, d.label]).concat([["Both", "Both"]]),
+        value: S.disc === "all" ? "Both" : (DISCS.find(d => d.id === S.disc) || {}).label },
+    ],
   },
   tables: {
     lead: "For an entry in a dataset's catalogue: a wrong path, a missing table, a description that no longer matches the file.",
@@ -511,7 +520,17 @@ const SUGGEST = {
     nameLabel: "Entry name or path",
     namePlaceholder: "e.g. nucleus_detection_v0, or intervals/trials",
     kinds: [["add", "Suggest a new entry"], ["change", "Suggest to change an entry"], ["remove", "Suggest to remove an entry"]],
-    extra: () => `Dataset: ${S.ds === "all" ? "(all)" : (DS[S.ds] || {}).label || S.ds}`,
+    fields: () => {
+      const ids = Object.keys(DS).filter(id => inDisc(DS[id].discipline, S.disc));
+      const disc = S.ds !== "all" && DS[S.ds] ? DS[S.ds].discipline : activeDiscs()[0];
+      return [
+        { id: "dataset", label: "Dataset",
+          options: ids.map(id => [DS[id].label, DS[id].label]),
+          value: S.ds !== "all" && DS[S.ds] ? DS[S.ds].label : null },
+        { id: "group", label: "Column it belongs in",
+          options: (GROUPS[disc] || []).map(g => [g.label, g.label]), value: null },
+      ];
+    },
   },
 };
 
@@ -525,6 +544,15 @@ function openSuggest(which){
   $("#sgName").placeholder = cfg.namePlaceholder;
   $("#sgKind").innerHTML = cfg.kinds
     .map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("");
+
+  $("#sgExtra").innerHTML = (cfg.fields ? cfg.fields() : []).map(f =>
+    `<label class="fld"><span class="fld-l">${esc(f.label)}</span>
+       <select data-extra="${esc(f.label)}">
+         <option value="">—</option>
+         ${f.options.map(([v, l]) =>
+            `<option value="${esc(v)}"${v === f.value ? " selected" : ""}>${esc(l)}</option>`).join("")}
+       </select></label>`).join("");
+
   syncSuggest();
   dlg.showModal();
   $("#sgKind").focus();
@@ -555,16 +583,18 @@ function suggestIssue(){
   const why = $("#sgWhy").value.trim();
   const file = ($("#sgArt").files || [])[0];
   const verb = { add: "Add", change: "Change", remove: "Remove" }[kind];
+  const article = /^[aeiou]/i.test(cfg.noun) ? "an" : "a";
 
   /* Blocks joined by blank lines, and the facts as a list. Markdown folds
      consecutive lines into one paragraph, and a bare `---` under a line of text
      turns that line into a heading — both of which this hit before it was
      assembled this way. */
   const facts = [
-    `- **Request** — ${verb} a ${cfg.noun}`,
+    `- **Request** — ${verb} ${article} ${cfg.noun}`,
     `- **${cfg.nameLabel}** — ${name}`,
-    cfg.extra ? `- **${cfg.extra()}**` : null,
-  ].filter(Boolean).join("\n");
+    ...$$("#sgExtra select").filter(s => s.value)
+       .map(s => `- **${s.dataset.extra}** — ${s.value}`),
+  ].join("\n");
 
   const body = [
     facts,

@@ -209,7 +209,10 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* ── suggest a change ───────────────────────────────────────────
    The trigger sits above the content it is about, right-aligned so it reads as
    an action on the pane rather than part of the pane. */
+/* in the legends row, pushed to the far right so it sits on the same line as
+   the Illustration legend rather than claiming a row of its own */
 .pane-head{display:flex; justify-content:flex-end; margin:.1rem 0 .35rem}
+.legends .suggest{margin-left:auto; align-self:flex-start}
 .suggest{appearance:none; font:inherit; font-size:.74rem; cursor:pointer;
   color:var(--muted); background:var(--card); border:1px solid var(--line);
   padding:.28rem .75rem; border-radius:99px; transition:color .2s, border-color .2s}
@@ -244,6 +247,8 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
   outline-offset:1px; border-color:transparent}
 .fld input[type=file]{font-size:.78rem; color:var(--muted)}
 .fld-note{font-size:.7rem; color:var(--faint); line-height:1.4}
+
+#sgExtra{display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))}
 
 .dlg footer{display:grid; gap:.6rem; border-top:1px solid var(--line); padding-top:.7rem}
 .dlg-note{margin:0; font-size:.7rem; color:var(--faint); line-height:1.45}
@@ -665,9 +670,6 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
 
   <!-- ── glossary ─────────────────────────────────────────────── -->
   <section id="view-glossary" class="view-pane">
-    <div class="pane-head">
-      <button class="suggest" type="button" data-suggest="glossary">Suggest a change</button>
-    </div>
     <div class="legends">
       <details class="legend" open>
         <summary>Category <span class="hint">— the colour on a card's edge. Click to filter.</span></summary>
@@ -680,6 +682,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
         by the people who know the data, but errors cannot be ruled out at this stage — read them as
         sketches of the idea, and trust the definition over the picture.</p>
       </details>
+      <button class="suggest" type="button" data-suggest="glossary">Suggest a change</button>
     </div>
     <div id="glossary" class="grid"></div>
     <p class="empty" id="glossEmpty" hidden>Nothing matches that search.</p>
@@ -743,6 +746,8 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <span class="fld-l" id="sgNameLabel">Card name</span>
       <input type="text" id="sgName" autocomplete="off" spellcheck="false" required>
     </label>
+
+    <div id="sgExtra"></div>
 
     <label class="fld">
       <span class="fld-l">Description <em id="sgDescHint"></em></span>
@@ -2464,6 +2469,15 @@ const SUGGEST = {
     nameLabel: "Card name",
     namePlaceholder: "the term, as it appears on the card",
     kinds: [["add", "Suggest a new card"], ["change", "Suggest to change a card"], ["remove", "Suggest to remove a card"]],
+    // a card cannot be filed without these, so the issue collects them rather
+    // than sending someone back to ask
+    fields: () => [
+      { id: "category", label: "Category",
+        options: CATS.map(c => [c.label, c.label]), value: null },
+      { id: "discipline", label: "Belongs to",
+        options: DISCS.map(d => [d.label, d.label]).concat([["Both", "Both"]]),
+        value: S.disc === "all" ? "Both" : (DISCS.find(d => d.id === S.disc) || {}).label },
+    ],
   },
   tables: {
     lead: "For an entry in a dataset's catalogue: a wrong path, a missing table, a description that no longer matches the file.",
@@ -2471,7 +2485,17 @@ const SUGGEST = {
     nameLabel: "Entry name or path",
     namePlaceholder: "e.g. nucleus_detection_v0, or intervals/trials",
     kinds: [["add", "Suggest a new entry"], ["change", "Suggest to change an entry"], ["remove", "Suggest to remove an entry"]],
-    extra: () => `Dataset: ${S.ds === "all" ? "(all)" : (DS[S.ds] || {}).label || S.ds}`,
+    fields: () => {
+      const ids = Object.keys(DS).filter(id => inDisc(DS[id].discipline, S.disc));
+      const disc = S.ds !== "all" && DS[S.ds] ? DS[S.ds].discipline : activeDiscs()[0];
+      return [
+        { id: "dataset", label: "Dataset",
+          options: ids.map(id => [DS[id].label, DS[id].label]),
+          value: S.ds !== "all" && DS[S.ds] ? DS[S.ds].label : null },
+        { id: "group", label: "Column it belongs in",
+          options: (GROUPS[disc] || []).map(g => [g.label, g.label]), value: null },
+      ];
+    },
   },
 };
 
@@ -2485,6 +2509,15 @@ function openSuggest(which){
   $("#sgName").placeholder = cfg.namePlaceholder;
   $("#sgKind").innerHTML = cfg.kinds
     .map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("");
+
+  $("#sgExtra").innerHTML = (cfg.fields ? cfg.fields() : []).map(f =>
+    `<label class="fld"><span class="fld-l">${esc(f.label)}</span>
+       <select data-extra="${esc(f.label)}">
+         <option value="">—</option>
+         ${f.options.map(([v, l]) =>
+            `<option value="${esc(v)}"${v === f.value ? " selected" : ""}>${esc(l)}</option>`).join("")}
+       </select></label>`).join("");
+
   syncSuggest();
   dlg.showModal();
   $("#sgKind").focus();
@@ -2515,16 +2548,18 @@ function suggestIssue(){
   const why = $("#sgWhy").value.trim();
   const file = ($("#sgArt").files || [])[0];
   const verb = { add: "Add", change: "Change", remove: "Remove" }[kind];
+  const article = /^[aeiou]/i.test(cfg.noun) ? "an" : "a";
 
   /* Blocks joined by blank lines, and the facts as a list. Markdown folds
      consecutive lines into one paragraph, and a bare `---` under a line of text
      turns that line into a heading — both of which this hit before it was
      assembled this way. */
   const facts = [
-    `- **Request** — ${verb} a ${cfg.noun}`,
+    `- **Request** — ${verb} ${article} ${cfg.noun}`,
     `- **${cfg.nameLabel}** — ${name}`,
-    cfg.extra ? `- **${cfg.extra()}**` : null,
-  ].filter(Boolean).join("\n");
+    ...$$("#sgExtra select").filter(s => s.value)
+       .map(s => `- **${s.dataset.extra}** — ${s.value}`),
+  ].join("\n");
 
   const body = [
     facts,

@@ -200,7 +200,10 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* ── suggest a change ───────────────────────────────────────────
    The trigger sits above the content it is about, right-aligned so it reads as
    an action on the pane rather than part of the pane. */
+/* in the legends row, pushed to the far right so it sits on the same line as
+   the Illustration legend rather than claiming a row of its own */
 .pane-head{display:flex; justify-content:flex-end; margin:.1rem 0 .35rem}
+.legends .suggest{margin-left:auto; align-self:flex-start}
 .suggest{appearance:none; font:inherit; font-size:.74rem; cursor:pointer;
   color:var(--muted); background:var(--card); border:1px solid var(--line);
   padding:.28rem .75rem; border-radius:99px; transition:color .2s, border-color .2s}
@@ -235,6 +238,8 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
   outline-offset:1px; border-color:transparent}
 .fld input[type=file]{font-size:.78rem; color:var(--muted)}
 .fld-note{font-size:.7rem; color:var(--faint); line-height:1.4}
+
+#sgExtra{display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))}
 
 .dlg footer{display:grid; gap:.6rem; border-top:1px solid var(--line); padding-top:.7rem}
 .dlg-note{margin:0; font-size:.7rem; color:var(--faint); line-height:1.45}

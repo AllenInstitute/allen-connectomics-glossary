@@ -87,9 +87,6 @@
 
   <!-- ── glossary ─────────────────────────────────────────────── -->
   <section id="view-glossary" class="view-pane">
-    <div class="pane-head">
-      <button class="suggest" type="button" data-suggest="glossary">Suggest a change</button>
-    </div>
     <div class="legends">
       <details class="legend" open>
         <summary>Category <span class="hint">— the colour on a card's edge. Click to filter.</span></summary>
@@ -102,6 +99,7 @@
         by the people who know the data, but errors cannot be ruled out at this stage — read them as
         sketches of the idea, and trust the definition over the picture.</p>
       </details>
+      <button class="suggest" type="button" data-suggest="glossary">Suggest a change</button>
     </div>
     <div id="glossary" class="grid"></div>
     <p class="empty" id="glossEmpty" hidden>Nothing matches that search.</p>
@@ -165,6 +163,8 @@
       <span class="fld-l" id="sgNameLabel">Card name</span>
       <input type="text" id="sgName" autocomplete="off" spellcheck="false" required>
     </label>
+
+    <div id="sgExtra"></div>
 
     <label class="fld">
       <span class="fld-l">Description <em id="sgDescHint"></em></span>
