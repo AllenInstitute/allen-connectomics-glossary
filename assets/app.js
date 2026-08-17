@@ -609,15 +609,11 @@ function step(){
 const OPEN_MS = 1000, CLOSE_MS = 1000, CLOSE_DELAY = 2000;
 let viewsTimer = null, viewsSettle = null, viewsOpen = false;
 
-function reduceMotion(){
-  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-}
-// no pointer to hover with, or motion turned down: the row stays open, and the
-// stylesheet already pins it there, so script should keep its hands off
-function viewsPinned(){
-  return reduceMotion() ||
-    !!(window.matchMedia && window.matchMedia("(hover: none)").matches);
-}
+const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
+function reduceMotion(){ return mq("(prefers-reduced-motion: reduce)"); }
+// with a pointer the row hides and hover reveals it; without one it starts open
+// and a swipe up puts it away, which is the only way to get the space back
+function canHover(){ return !mq("(hover: none)"); }
 
 // keep re-measuring while a CSS transition is moving the layout under us
 function trackScope(ms){
@@ -639,7 +635,7 @@ function viewsHeight(wrap){
 
 function setViews(open){
   const wrap = $("#viewsWrap");
-  if (!wrap || viewsPinned() || open === viewsOpen) return;
+  if (!wrap || open === viewsOpen) return;
 
   const h = viewsHeight(wrap);
   if (!h) return;               // nothing laid out yet, e.g. a test DOM. Bail
@@ -655,7 +651,7 @@ function setViews(open){
   wrap.classList.toggle("open", open);
   wrap.style.height = (open ? h : 0) + "px";
 
-  const ms = open ? OPEN_MS : CLOSE_MS;
+  const ms = reduceMotion() ? 0 : (open ? OPEN_MS : CLOSE_MS);
   trackScope(ms);
   // Once open, let the row size itself again so the tabs can wrap. This has to
   // be an explicit `auto` rather than clearing the inline height: the shut
@@ -1005,13 +1001,41 @@ function init(){
      it is worse than one that lingers. */
   const scope = $(".scope"), bar = $(".topbar");
   if (scope && bar){
-    scope.addEventListener("pointerenter", openViews);
-    bar.addEventListener("pointerleave", closeViewsSoon);
+    // the stylesheet leaves the row open where there is no pointer, so start
+    // the bookkeeping from what is actually on screen
+    viewsOpen = !canHover();
+
+    if (canHover()){
+      scope.addEventListener("pointerenter", openViews);
+      bar.addEventListener("pointerleave", closeViewsSoon);
+    } else {
+      /* No hover to reveal it with, so the row is put away and fetched back by
+         swiping the scope: up to collapse, down to open. The strip sets
+         touch-action:pan-x, so a vertical drag here is ours and the page does
+         not scroll out from under the gesture. */
+      const SWIPE = 26;                 // px before a drag counts as a swipe
+      let x0 = 0, y0 = 0, live = false;
+      scope.addEventListener("touchstart", e => {
+        if (e.touches.length !== 1) { live = false; return; }
+        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; live = true;
+      }, { passive: true });
+      scope.addEventListener("touchend", e => {
+        if (!live) return;
+        live = false;
+        const t = e.changedTouches[0];
+        const dy = t.clientY - y0, dx = t.clientX - x0;
+        // vertical, and decisively so: a thumb on its way somewhere else
+        // should not fold the menu away
+        if (Math.abs(dy) < SWIPE || Math.abs(dy) < Math.abs(dx) * 1.4) return;
+        setViews(dy > 0);
+      }, { passive: true });
+    }
+
     // keyboard users never fire pointerenter, and a focused control inside a
     // zero-height box is a control nobody can see
     scope.addEventListener("focusin", openViews);
     scope.addEventListener("focusout", e => {
-      if (!scope.contains(e.relatedTarget)) closeViewsSoon();
+      if (canHover() && !scope.contains(e.relatedTarget)) closeViewsSoon();
     });
   }
 

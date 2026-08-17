@@ -103,7 +103,8 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .topbar{position:sticky; top:0; z-index:30; background:color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter:saturate(140%) blur(10px); border-bottom:1px solid var(--line)}
 .topbar-in{display:flex; align-items:center; gap:1.25rem; padding-top:.7rem; padding-bottom:.5rem}
-.topbar-in .theme{margin-left:auto}
+.topbar-in #communityLink{margin-left:auto}
+.topbar-in .theme{flex:none}
 .brand{display:flex; align-items:center; gap:.55rem; min-width:0}
 /* The Allen "a/" mark. The artwork is a circle with the glyph knocked out to
    transparency, so it is used as a mask and painted rather than drawn: one
@@ -167,12 +168,24 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
   transition:height 1s cubic-bezier(.22,.8,.24,1), opacity .7s ease}
 .views-wrap.open{opacity:1}
 
-/* Without hover there is nothing to reveal it with, and a row that can only be
-   opened by pointing is a row a touch user never sees. Same for anyone who has
-   asked for less motion: leave it open and still. */
-@media (hover: none), (prefers-reduced-motion: reduce){
-  .views-wrap{height:auto !important; opacity:1 !important; transition:none}
+/* Without a pointer there is no hover to reveal it with, so touch starts open
+   and is closed by swiping up — the opposite default, because a row nobody can
+   reveal is a row nobody sees. The starting height is set here rather than in
+   script so it is right on the first frame; script takes over from there. */
+@media (hover: none){
+  .views-wrap{height:auto; opacity:1}
+  /* the gesture lives on this strip, so the page must not pan under it */
+  .scope{touch-action:pan-x}
+  .swipe-hint{display:block}
 }
+@media (prefers-reduced-motion: reduce){
+  .views-wrap{transition:none}
+}
+
+/* A handle, so the gesture is guessable rather than folklore. Touch only —
+   there is nothing to grab with a mouse. */
+.swipe-hint{display:none; width:34px; height:3px; border-radius:99px;
+  background:var(--line-2); margin:.35rem auto .1rem; opacity:.8}
 .views{display:flex; gap:.15rem; margin-top:.55rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .25s}
@@ -188,10 +201,11 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 
 /* the filter is expensive to composite while printing, and means nothing there */
 @media print{ .scope-goo, .scope-mouse{display:none} }
-/* leaves the site, so it is set apart from the scopes it sits beside */
+/* Leaves the site, so it sits in the title bar with the theme switch rather
+   than among the controls that scope this one — and up there it cannot wrap
+   into a row of its own on a narrow screen. */
 a.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.22rem;
-  font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;
-  margin-left:.5rem; padding-left:.85rem; border-left:1px solid var(--line);
+  font-size:.74rem; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap;
   transition:color .25s}
 a.out:hover{color:var(--accent-ink)}
 a.out span{font-size:.8em; opacity:.75}
@@ -491,6 +505,16 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   .sheet{padding:16px}
 }
 
+/* On a narrow phone the title, the outbound link and the theme switch stop
+   fitting on one line at the roomy gap, and the switch drops to a line of its
+   own — the same stray row the link used to make. Tightening the gap and the
+   page padding buys back the ~30 px that costs. */
+@media (max-width:420px){
+  .wrap{padding:0 14px}
+  .topbar-in{gap:.55rem}
+  .brand-t b{font-size:.9rem}
+}
+
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
 
 /* ── print ───────────────────────────────────────────────────── */
@@ -519,6 +543,9 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <span class="brand-t"><b id="siteTitle">Allen Glossary</b></span>
     </div>
 
+    <a class="out" id="communityLink" href="https://community.brain-map.org/"
+       target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
+
     <button class="theme" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">
       <span aria-hidden="true">◐</span>
     </button>
@@ -545,16 +572,13 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <i class="blob bridge" data-row="bridge"></i>
     </div>
 
-    <!-- row one: where you are. Community leaves the site, so it sits out here
-         with the scopes rather than among the views of this one. -->
+    <!-- row one: where you are -->
     <div class="disc-row">
       <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
-      <a class="out" id="communityLink" href="https://community.brain-map.org/"
-         target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
     </div>
 
-    <!-- row two: how you are looking at it. Collapses and reopens whenever row
-         one changes, because what it lists has just been rescoped. -->
+    <!-- row two: how you are looking at it. Opens on hover where there is a
+         pointer, and on a swipe down where there is not. -->
     <div class="views-wrap" id="viewsWrap">
       <nav class="views" aria-label="Views">
         <button class="view" data-view="glossary" aria-current="page">Glossary</button>
@@ -562,6 +586,7 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
         <button class="view" data-view="sheet">Cheat sheet</button>
       </nav>
     </div>
+    <i class="swipe-hint" aria-hidden="true"></i>
   </div>
 
   <div class="wrap ctrlbar">
@@ -2416,15 +2441,11 @@ function step(){
 const OPEN_MS = 1000, CLOSE_MS = 1000, CLOSE_DELAY = 2000;
 let viewsTimer = null, viewsSettle = null, viewsOpen = false;
 
-function reduceMotion(){
-  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-}
-// no pointer to hover with, or motion turned down: the row stays open, and the
-// stylesheet already pins it there, so script should keep its hands off
-function viewsPinned(){
-  return reduceMotion() ||
-    !!(window.matchMedia && window.matchMedia("(hover: none)").matches);
-}
+const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
+function reduceMotion(){ return mq("(prefers-reduced-motion: reduce)"); }
+// with a pointer the row hides and hover reveals it; without one it starts open
+// and a swipe up puts it away, which is the only way to get the space back
+function canHover(){ return !mq("(hover: none)"); }
 
 // keep re-measuring while a CSS transition is moving the layout under us
 function trackScope(ms){
@@ -2446,7 +2467,7 @@ function viewsHeight(wrap){
 
 function setViews(open){
   const wrap = $("#viewsWrap");
-  if (!wrap || viewsPinned() || open === viewsOpen) return;
+  if (!wrap || open === viewsOpen) return;
 
   const h = viewsHeight(wrap);
   if (!h) return;               // nothing laid out yet, e.g. a test DOM. Bail
@@ -2462,7 +2483,7 @@ function setViews(open){
   wrap.classList.toggle("open", open);
   wrap.style.height = (open ? h : 0) + "px";
 
-  const ms = open ? OPEN_MS : CLOSE_MS;
+  const ms = reduceMotion() ? 0 : (open ? OPEN_MS : CLOSE_MS);
   trackScope(ms);
   // Once open, let the row size itself again so the tabs can wrap. This has to
   // be an explicit `auto` rather than clearing the inline height: the shut
@@ -2812,13 +2833,41 @@ function init(){
      it is worse than one that lingers. */
   const scope = $(".scope"), bar = $(".topbar");
   if (scope && bar){
-    scope.addEventListener("pointerenter", openViews);
-    bar.addEventListener("pointerleave", closeViewsSoon);
+    // the stylesheet leaves the row open where there is no pointer, so start
+    // the bookkeeping from what is actually on screen
+    viewsOpen = !canHover();
+
+    if (canHover()){
+      scope.addEventListener("pointerenter", openViews);
+      bar.addEventListener("pointerleave", closeViewsSoon);
+    } else {
+      /* No hover to reveal it with, so the row is put away and fetched back by
+         swiping the scope: up to collapse, down to open. The strip sets
+         touch-action:pan-x, so a vertical drag here is ours and the page does
+         not scroll out from under the gesture. */
+      const SWIPE = 26;                 // px before a drag counts as a swipe
+      let x0 = 0, y0 = 0, live = false;
+      scope.addEventListener("touchstart", e => {
+        if (e.touches.length !== 1) { live = false; return; }
+        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; live = true;
+      }, { passive: true });
+      scope.addEventListener("touchend", e => {
+        if (!live) return;
+        live = false;
+        const t = e.changedTouches[0];
+        const dy = t.clientY - y0, dx = t.clientX - x0;
+        // vertical, and decisively so: a thumb on its way somewhere else
+        // should not fold the menu away
+        if (Math.abs(dy) < SWIPE || Math.abs(dy) < Math.abs(dx) * 1.4) return;
+        setViews(dy > 0);
+      }, { passive: true });
+    }
+
     // keyboard users never fire pointerenter, and a focused control inside a
     // zero-height box is a control nobody can see
     scope.addEventListener("focusin", openViews);
     scope.addEventListener("focusout", e => {
-      if (!scope.contains(e.relatedTarget)) closeViewsSoon();
+      if (canHover() && !scope.contains(e.relatedTarget)) closeViewsSoon();
     });
   }
 

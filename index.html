@@ -19,6 +19,9 @@
       <span class="brand-t"><b id="siteTitle">Allen Glossary</b></span>
     </div>
 
+    <a class="out" id="communityLink" href="https://community.brain-map.org/"
+       target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
+
     <button class="theme" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">
       <span aria-hidden="true">◐</span>
     </button>
@@ -45,16 +48,13 @@
       <i class="blob bridge" data-row="bridge"></i>
     </div>
 
-    <!-- row one: where you are. Community leaves the site, so it sits out here
-         with the scopes rather than among the views of this one. -->
+    <!-- row one: where you are -->
     <div class="disc-row">
       <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
-      <a class="out" id="communityLink" href="https://community.brain-map.org/"
-         target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
     </div>
 
-    <!-- row two: how you are looking at it. Collapses and reopens whenever row
-         one changes, because what it lists has just been rescoped. -->
+    <!-- row two: how you are looking at it. Opens on hover where there is a
+         pointer, and on a swipe down where there is not. -->
     <div class="views-wrap" id="viewsWrap">
       <nav class="views" aria-label="Views">
         <button class="view" data-view="glossary" aria-current="page">Glossary</button>
@@ -62,6 +62,7 @@
         <button class="view" data-view="sheet">Cheat sheet</button>
       </nav>
     </div>
+    <i class="swipe-hint" aria-hidden="true"></i>
   </div>
 
   <div class="wrap ctrlbar">

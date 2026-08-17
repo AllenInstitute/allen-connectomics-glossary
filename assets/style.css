@@ -94,7 +94,8 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .topbar{position:sticky; top:0; z-index:30; background:color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter:saturate(140%) blur(10px); border-bottom:1px solid var(--line)}
 .topbar-in{display:flex; align-items:center; gap:1.25rem; padding-top:.7rem; padding-bottom:.5rem}
-.topbar-in .theme{margin-left:auto}
+.topbar-in #communityLink{margin-left:auto}
+.topbar-in .theme{flex:none}
 .brand{display:flex; align-items:center; gap:.55rem; min-width:0}
 /* The Allen "a/" mark. The artwork is a circle with the glyph knocked out to
    transparency, so it is used as a mask and painted rather than drawn: one
@@ -158,12 +159,24 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
   transition:height 1s cubic-bezier(.22,.8,.24,1), opacity .7s ease}
 .views-wrap.open{opacity:1}
 
-/* Without hover there is nothing to reveal it with, and a row that can only be
-   opened by pointing is a row a touch user never sees. Same for anyone who has
-   asked for less motion: leave it open and still. */
-@media (hover: none), (prefers-reduced-motion: reduce){
-  .views-wrap{height:auto !important; opacity:1 !important; transition:none}
+/* Without a pointer there is no hover to reveal it with, so touch starts open
+   and is closed by swiping up — the opposite default, because a row nobody can
+   reveal is a row nobody sees. The starting height is set here rather than in
+   script so it is right on the first frame; script takes over from there. */
+@media (hover: none){
+  .views-wrap{height:auto; opacity:1}
+  /* the gesture lives on this strip, so the page must not pan under it */
+  .scope{touch-action:pan-x}
+  .swipe-hint{display:block}
 }
+@media (prefers-reduced-motion: reduce){
+  .views-wrap{transition:none}
+}
+
+/* A handle, so the gesture is guessable rather than folklore. Touch only —
+   there is nothing to grab with a mouse. */
+.swipe-hint{display:none; width:34px; height:3px; border-radius:99px;
+  background:var(--line-2); margin:.35rem auto .1rem; opacity:.8}
 .views{display:flex; gap:.15rem; margin-top:.55rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .25s}
@@ -179,10 +192,11 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 
 /* the filter is expensive to composite while printing, and means nothing there */
 @media print{ .scope-goo, .scope-mouse{display:none} }
-/* leaves the site, so it is set apart from the scopes it sits beside */
+/* Leaves the site, so it sits in the title bar with the theme switch rather
+   than among the controls that scope this one — and up there it cannot wrap
+   into a row of its own on a narrow screen. */
 a.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.22rem;
-  font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;
-  margin-left:.5rem; padding-left:.85rem; border-left:1px solid var(--line);
+  font-size:.74rem; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap;
   transition:color .25s}
 a.out:hover{color:var(--accent-ink)}
 a.out span{font-size:.8em; opacity:.75}
@@ -480,6 +494,16 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   .grid{columns:1}
   .lanes{grid-template-columns:1fr}
   .sheet{padding:16px}
+}
+
+/* On a narrow phone the title, the outbound link and the theme switch stop
+   fitting on one line at the roomy gap, and the switch drops to a line of its
+   own — the same stray row the link used to make. Tightening the gap and the
+   page padding buys back the ~30 px that costs. */
+@media (max-width:420px){
+  .wrap{padding:0 14px}
+  .topbar-in{gap:.55rem}
+  .brand-t b{font-size:.9rem}
 }
 
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
