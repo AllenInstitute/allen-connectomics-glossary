@@ -205,8 +205,9 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .pane-head{display:flex; justify-content:flex-end; margin:.1rem 0 .35rem}
 .legends .suggest{margin-left:auto; align-self:flex-start}
 /* on the tables page it belongs beside the heading it is an action on */
-.sec-head-row{display:flex; align-items:center; gap:1rem; flex-wrap:wrap}
-.sec-head-row .sec-h{margin-bottom:0}
+.sec-head-row{display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem}
+.sec-head-txt{flex:1 1 20rem; min-width:0}
+.sec-head-row .sec-p{margin-bottom:0}
 .sec-head-row .suggest{margin-left:auto}
 .suggest{appearance:none; font:inherit; font-size:.74rem; cursor:pointer;
   color:var(--muted); background:var(--card); border:1px solid var(--line);

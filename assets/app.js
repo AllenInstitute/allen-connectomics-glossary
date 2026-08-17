@@ -302,10 +302,13 @@ function renderTables(){
     : `Each column collects the tables that record one kind of thing. Greyed entries are the underlying
        measurements and the products you assemble yourself; the rest are CAVE tables you can query.`;
   $("#tablesOut").innerHTML =
-    `<div class="sec-head-row"><h2 class="sec-h">Tables at a glance</h2>` +
+    // the trigger centres on the whole intro, heading and paragraph together —
+    // pinned to the heading alone it perches above everything it acts on.
+    `<div class="sec-head-row"><div class="sec-head-txt">` +
+    `<h2 class="sec-h">Tables at a glance</h2><p class="sec-p">${intro}</p></div>` +
     (window.SITE.repo
       ? `<button class="suggest" type="button" data-suggest="tables">Suggest a change</button>` : "") +
-    `</div><p class="sec-p">${intro}</p>`
+    `</div>`
     + (ids.length ? ids.map(datasetBlock).join("")
                   : `<p class="empty">No datasets in this discipline.</p>`);
   renderSnips();
