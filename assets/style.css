@@ -189,6 +189,13 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .scope-mouse{position:absolute; left:0; top:0; z-index:3; pointer-events:none;
   color:var(--faint); opacity:.5; will-change:transform}
 .scope-mouse svg{display:block}
+/* the rare one. Carried a little more brightly than the others, because a gold
+   mouse nobody notices is not worth having */
+.scope-mouse.gold{color:var(--gold); opacity:.85}
+:root{ --gold:#c8912a }
+@media (prefers-color-scheme: dark){ :root{ --gold:#e6c25c } }
+:root[data-theme="dark"]{ --gold:#e6c25c }
+:root[data-theme="light"]{ --gold:#c8912a }
 
 /* the filter is expensive to composite while printing, and means nothing there */
 @media print{ .scope-goo, .scope-mouse{display:none} }

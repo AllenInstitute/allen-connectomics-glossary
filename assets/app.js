@@ -763,6 +763,13 @@ const MOUSE_SVG =
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
+/* Once in a while the one that runs past is gold — a nod to the Golden Mouse,
+   the single V1DD animal that was also coregistered. How often depends on where
+   you are standing. "All" was not specified; it sits between the two, since it
+   is showing you both. */
+const GOLD = { connectomics: 0.15, physiology: 0.05, all: 0.10 };
+const goldChance = disc => GOLD[disc] || 0;
+
 function runMouse(){
   const scope = $(".scope"), wrap = $("#viewsWrap");
   if (!scope || !wrap || reduceMotion()) return;
@@ -792,7 +799,7 @@ function runMouse(){
   };
 
   const el = document.createElement("i");
-  el.className = "scope-mouse";
+  el.className = "scope-mouse" + (Math.random() < goldChance(S.disc) ? " gold" : "");
   el.innerHTML = MOUSE_SVG;
   scope.appendChild(el);
 
