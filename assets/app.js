@@ -531,6 +531,53 @@ function step(){
   if (moving) springFrame = requestAnimationFrame(step);
 }
 
+/* Row two collapses and reopens when row one changes, because what it lists has
+   just been rescoped. The surface follows it out of the live layout rather than
+   being told about it: with the row shut there is nothing to measure, so the
+   view blob shrinks into the discipline blob and the neck retracts with it. */
+const COLLAPSE = 190, REOPEN = 260;
+let pulseTimers = [];
+
+function reduceMotion(){
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+// keep re-measuring while a CSS transition is moving the layout under us
+function trackScope(ms){
+  const until = Date.now() + ms;
+  const tick = () => { placeScope(); if (Date.now() < until) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+
+function pulseViews(){
+  const wrap = $("#viewsWrap");
+  if (!wrap || reduceMotion()) return;
+
+  pulseTimers.forEach(clearTimeout);
+  pulseTimers = [];
+
+  // measure the wrapper, not the nav inside it: the nav's top margin belongs to
+  // the wrapper's height, and animating to the nav's height alone leaves a snap
+  // at the end when the height goes back to auto
+  wrap.style.height = "";
+  const h = wrap.getBoundingClientRect().height;
+  if (!h) return;                       // never measured, e.g. in a test DOM
+
+  wrap.style.height = h + "px";
+  void wrap.offsetHeight;               // commit that height before changing it
+  wrap.classList.add("collapsed");
+  wrap.style.height = "0px";
+  trackScope(COLLAPSE);
+
+  pulseTimers.push(setTimeout(() => {
+    wrap.classList.remove("collapsed");
+    wrap.style.height = h + "px";
+    trackScope(REOPEN);
+    // back to auto once it is open, so the row can still wrap if it needs to
+    pulseTimers.push(setTimeout(() => { wrap.style.height = ""; placeScope(); }, REOPEN));
+  }, COLLAPSE));
+}
+
 // Measured from the live layout, so it survives wrapping, resizing, font swaps.
 function placeScope(){
   const scope = $(".scope");
@@ -645,10 +692,11 @@ function init(){
   $("#discCtl").addEventListener("click", e => {
     const b = e.target.closest(".discb");
     if (!b) return;
+    if (b.dataset.disc === S.disc) return;
     S.disc = b.dataset.disc;
     const live = new Set(visibleCats().map(c => c.id));
     S.cats = (S.cats || []).filter(c => live.has(c));
-    save(); render();
+    save(); render(); pulseViews();
   });
 
   // the pills are rebuilt whenever the discipline changes, so delegate

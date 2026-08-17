@@ -44,15 +44,23 @@
       <i class="blob bridge" data-row="bridge"></i>
     </div>
 
-    <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
-
-    <nav class="views" aria-label="Views">
-      <button class="view" data-view="glossary" aria-current="page">Glossary</button>
-      <button class="view" data-view="tables">Tables</button>
-      <button class="view" data-view="sheet">Cheat sheet</button>
-      <a class="view out" id="communityLink" href="https://community.brain-map.org/"
+    <!-- row one: where you are. Community leaves the site, so it sits out here
+         with the scopes rather than among the views of this one. -->
+    <div class="disc-row">
+      <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
+      <a class="out" id="communityLink" href="https://community.brain-map.org/"
          target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
-    </nav>
+    </div>
+
+    <!-- row two: how you are looking at it. Collapses and reopens whenever row
+         one changes, because what it lists has just been rescoped. -->
+    <div class="views-wrap" id="viewsWrap">
+      <nav class="views" aria-label="Views">
+        <button class="view" data-view="glossary" aria-current="page">Glossary</button>
+        <button class="view" data-view="tables">Tables</button>
+        <button class="view" data-view="sheet">Cheat sheet</button>
+      </nav>
+    </div>
   </div>
 
   <div class="wrap ctrlbar">

@@ -125,7 +125,7 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* the surface is clipped to the control: at the widest span the neck is thick
    enough that it would otherwise run past the header rule and over the page */
 .scope{position:relative; padding-top:.75rem; padding-bottom:.3rem; overflow:hidden}
-.scope > .disc, .scope > .views{position:relative; z-index:1}
+.scope > .disc-row, .scope > .views-wrap{position:relative; z-index:1}
 .goo-defs{position:absolute; width:0; height:0; pointer-events:none}
 
 .scope-goo{position:absolute; inset:0; z-index:0; pointer-events:none;
@@ -147,6 +147,7 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 :root[data-theme="dark"] .scope-goo{opacity:.26}
 :root[data-theme="light"] .scope-goo{opacity:.17}
 
+.disc-row{display:flex; align-items:baseline; gap:.2rem; flex-wrap:wrap}
 .disc{display:flex; align-items:center; gap:.2rem; flex-wrap:wrap}
 .discb{appearance:none; font:inherit; font-size:.74rem; cursor:pointer; color:var(--faint);
   background:none; border:0; padding:.2rem .7rem; border-radius:99px;
@@ -154,6 +155,11 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .discb:hover{color:var(--ink)}
 .discb[aria-pressed="true"]{color:var(--accent-ink); font-weight:600}
 
+/* height is set in px by app.js so it can be animated; it returns to auto once
+   the row is open, so the layout still adapts if the tabs ever wrap */
+.views-wrap{overflow:hidden;
+  transition:height .26s cubic-bezier(.22,.8,.24,1), opacity .18s ease}
+.views-wrap.collapsed{opacity:0}
 .views{display:flex; gap:.15rem; margin-top:.55rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .25s}
@@ -162,11 +168,13 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 
 /* the filter is expensive to composite while printing, and means nothing there */
 @media print{ .scope-goo{display:none} }
-/* leaves the site, so it is set apart from the tabs that switch views */
-a.view.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.25rem;
-  margin-left:.35rem; padding-left:.9rem; border-left:1px solid var(--line); border-radius:0}
-a.view.out:hover{color:var(--accent-ink); background:none}
-a.view.out span{font-size:.72em; opacity:.8}
+/* leaves the site, so it is set apart from the scopes it sits beside */
+a.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.22rem;
+  font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;
+  margin-left:.5rem; padding-left:.85rem; border-left:1px solid var(--line);
+  transition:color .25s}
+a.out:hover{color:var(--accent-ink)}
+a.out span{font-size:.8em; opacity:.75}
 
 .theme{appearance:none; border:1px solid var(--line); background:var(--card); color:var(--muted);
   width:30px; height:30px; border-radius:99px; cursor:pointer; font-size:.85rem; line-height:1; flex:none}
@@ -517,15 +525,23 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
       <i class="blob bridge" data-row="bridge"></i>
     </div>
 
-    <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
-
-    <nav class="views" aria-label="Views">
-      <button class="view" data-view="glossary" aria-current="page">Glossary</button>
-      <button class="view" data-view="tables">Tables</button>
-      <button class="view" data-view="sheet">Cheat sheet</button>
-      <a class="view out" id="communityLink" href="https://community.brain-map.org/"
+    <!-- row one: where you are. Community leaves the site, so it sits out here
+         with the scopes rather than among the views of this one. -->
+    <div class="disc-row">
+      <div class="disc" role="group" aria-label="Discipline" id="discCtl"></div>
+      <a class="out" id="communityLink" href="https://community.brain-map.org/"
          target="_blank" rel="noopener">Community <span aria-hidden="true">↗</span></a>
-    </nav>
+    </div>
+
+    <!-- row two: how you are looking at it. Collapses and reopens whenever row
+         one changes, because what it lists has just been rescoped. -->
+    <div class="views-wrap" id="viewsWrap">
+      <nav class="views" aria-label="Views">
+        <button class="view" data-view="glossary" aria-current="page">Glossary</button>
+        <button class="view" data-view="tables">Tables</button>
+        <button class="view" data-view="sheet">Cheat sheet</button>
+      </nav>
+    </div>
   </div>
 
   <div class="wrap ctrlbar">
@@ -2283,6 +2299,53 @@ function step(){
   if (moving) springFrame = requestAnimationFrame(step);
 }
 
+/* Row two collapses and reopens when row one changes, because what it lists has
+   just been rescoped. The surface follows it out of the live layout rather than
+   being told about it: with the row shut there is nothing to measure, so the
+   view blob shrinks into the discipline blob and the neck retracts with it. */
+const COLLAPSE = 190, REOPEN = 260;
+let pulseTimers = [];
+
+function reduceMotion(){
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+// keep re-measuring while a CSS transition is moving the layout under us
+function trackScope(ms){
+  const until = Date.now() + ms;
+  const tick = () => { placeScope(); if (Date.now() < until) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+
+function pulseViews(){
+  const wrap = $("#viewsWrap");
+  if (!wrap || reduceMotion()) return;
+
+  pulseTimers.forEach(clearTimeout);
+  pulseTimers = [];
+
+  // measure the wrapper, not the nav inside it: the nav's top margin belongs to
+  // the wrapper's height, and animating to the nav's height alone leaves a snap
+  // at the end when the height goes back to auto
+  wrap.style.height = "";
+  const h = wrap.getBoundingClientRect().height;
+  if (!h) return;                       // never measured, e.g. in a test DOM
+
+  wrap.style.height = h + "px";
+  void wrap.offsetHeight;               // commit that height before changing it
+  wrap.classList.add("collapsed");
+  wrap.style.height = "0px";
+  trackScope(COLLAPSE);
+
+  pulseTimers.push(setTimeout(() => {
+    wrap.classList.remove("collapsed");
+    wrap.style.height = h + "px";
+    trackScope(REOPEN);
+    // back to auto once it is open, so the row can still wrap if it needs to
+    pulseTimers.push(setTimeout(() => { wrap.style.height = ""; placeScope(); }, REOPEN));
+  }, COLLAPSE));
+}
+
 // Measured from the live layout, so it survives wrapping, resizing, font swaps.
 function placeScope(){
   const scope = $(".scope");
@@ -2397,10 +2460,11 @@ function init(){
   $("#discCtl").addEventListener("click", e => {
     const b = e.target.closest(".discb");
     if (!b) return;
+    if (b.dataset.disc === S.disc) return;
     S.disc = b.dataset.disc;
     const live = new Set(visibleCats().map(c => c.id));
     S.cats = (S.cats || []).filter(c => live.has(c));
-    save(); render();
+    save(); render(); pulseViews();
   });
 
   // the pills are rebuilt whenever the discipline changes, so delegate

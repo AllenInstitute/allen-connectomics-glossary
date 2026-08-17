@@ -117,7 +117,7 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 /* the surface is clipped to the control: at the widest span the neck is thick
    enough that it would otherwise run past the header rule and over the page */
 .scope{position:relative; padding-top:.75rem; padding-bottom:.3rem; overflow:hidden}
-.scope > .disc, .scope > .views{position:relative; z-index:1}
+.scope > .disc-row, .scope > .views-wrap{position:relative; z-index:1}
 .goo-defs{position:absolute; width:0; height:0; pointer-events:none}
 
 .scope-goo{position:absolute; inset:0; z-index:0; pointer-events:none;
@@ -139,6 +139,7 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 :root[data-theme="dark"] .scope-goo{opacity:.26}
 :root[data-theme="light"] .scope-goo{opacity:.17}
 
+.disc-row{display:flex; align-items:baseline; gap:.2rem; flex-wrap:wrap}
 .disc{display:flex; align-items:center; gap:.2rem; flex-wrap:wrap}
 .discb{appearance:none; font:inherit; font-size:.74rem; cursor:pointer; color:var(--faint);
   background:none; border:0; padding:.2rem .7rem; border-radius:99px;
@@ -146,6 +147,11 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .discb:hover{color:var(--ink)}
 .discb[aria-pressed="true"]{color:var(--accent-ink); font-weight:600}
 
+/* height is set in px by app.js so it can be animated; it returns to auto once
+   the row is open, so the layout still adapts if the tabs ever wrap */
+.views-wrap{overflow:hidden;
+  transition:height .26s cubic-bezier(.22,.8,.24,1), opacity .18s ease}
+.views-wrap.collapsed{opacity:0}
 .views{display:flex; gap:.15rem; margin-top:.55rem}
 .view{appearance:none; border:0; background:none; font:inherit; font-size:.85rem; color:var(--muted);
   padding:.3rem .8rem; border-radius:99px; cursor:pointer; white-space:nowrap; transition:color .25s}
@@ -154,11 +160,13 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 
 /* the filter is expensive to composite while printing, and means nothing there */
 @media print{ .scope-goo{display:none} }
-/* leaves the site, so it is set apart from the tabs that switch views */
-a.view.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.25rem;
-  margin-left:.35rem; padding-left:.9rem; border-left:1px solid var(--line); border-radius:0}
-a.view.out:hover{color:var(--accent-ink); background:none}
-a.view.out span{font-size:.72em; opacity:.8}
+/* leaves the site, so it is set apart from the scopes it sits beside */
+a.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.22rem;
+  font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;
+  margin-left:.5rem; padding-left:.85rem; border-left:1px solid var(--line);
+  transition:color .25s}
+a.out:hover{color:var(--accent-ink)}
+a.out span{font-size:.8em; opacity:.75}
 
 .theme{appearance:none; border:1px solid var(--line); background:var(--card); color:var(--muted);
   width:30px; height:30px; border-radius:99px; cursor:pointer; font-size:.85rem; line-height:1; flex:none}

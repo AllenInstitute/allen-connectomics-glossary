@@ -30,6 +30,11 @@ the Tables view lists, and what the cheat sheet prints. A term inherits its disc
 from its category, unless it declares its own — cell types belong to `both`, because a
 basket cell is the same cell however it was recorded.
 
+Row one carries the scopes and the outbound **Community** link, which leaves the site
+and so belongs beside them rather than among the views of this one. Row two carries the
+views, and collapses and reopens whenever row one changes — what it lists has just been
+rescoped, and the surface retracts into the discipline blob and re-emerges with it.
+
 The two rows are one control, and the indicator behind them says so: two blobs and a
 ligament joining them, run through a blur-then-threshold SVG filter, so they fuse into a
 single surface when close and draw out into a thin strand when far apart. Geometry comes
@@ -76,8 +81,8 @@ controls are set to. It flows across as many US Letter pages as the content need
 never splits an entry across a page break. Print or save to PDF from the button, or just
 press ⌘P / Ctrl+P from any view.
 
-**Community** is not a view — it opens the [Allen Brain Map community forum](https://community.brain-map.org/)
-in a new tab. The URL lives in `data/config.js` under `SITE.community`; clear it and the tab
+**Community** is not a view — it sits in the scope row and opens the
+[Allen Brain Map community forum](https://community.brain-map.org/) in a new tab. The URL lives in `data/config.js` under `SITE.community`; clear it and the tab
 disappears.
 
 The dataset control belongs to the Tables view, where choosing one is a real question.
