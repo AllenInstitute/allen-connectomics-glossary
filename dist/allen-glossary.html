@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Allen Glossary</title>
 <meta name="description" content="A searchable glossary and table reference for the Allen Institute connectomics and physiology datasets.">
+<link rel="icon" id="favicon" href="data:,">
 <style>
 /* ==========================================================================
    Allen Glossary
@@ -104,12 +105,14 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .topbar-in{display:flex; align-items:center; gap:1.25rem; padding-top:.7rem; padding-bottom:.5rem}
 .topbar-in .theme{margin-left:auto}
 .brand{display:flex; align-items:center; gap:.55rem; min-width:0}
-.mark{width:15px; height:15px; flex:none; border-radius:3px;
-  background:
-    radial-gradient(circle at 30% 32%, var(--accent) 0 2.6px, transparent 2.7px),
-    radial-gradient(circle at 72% 66%, var(--accent) 0 2.6px, transparent 2.7px),
-    linear-gradient(125deg, transparent 45%, var(--accent) 45%, var(--accent) 55%, transparent 55%);
-  border:1px solid var(--line-2)}
+/* The Allen "a/" mark. The artwork is a circle with the glyph knocked out to
+   transparency, so it is used as a mask and painted rather than drawn: one
+   asset, any colour, and it follows the favicon's cycle. --mark and --brand are
+   set from data/brand.js at startup. */
+.mark{width:17px; height:17px; flex:none;
+  background:var(--brand, var(--accent));
+  -webkit-mask:var(--mark) center / contain no-repeat;
+          mask:var(--mark) center / contain no-repeat}
 .brand-t{display:flex; flex-direction:column; line-height:1.15; min-width:0}
 .brand-t b{font-size:.95rem; letter-spacing:-.012em; white-space:nowrap}
 .brand-t i{font-style:normal; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em;
@@ -176,8 +179,15 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .view:hover{color:var(--ink)}
 .view[aria-current="page"]{color:var(--accent-ink); font-weight:600}
 
+/* Sometimes something runs across the row when it opens. It is clipped by the
+   scope, which is why it vanishes at the bottom edge — exactly where the search
+   field begins. */
+.scope-mouse{position:absolute; left:0; top:0; z-index:3; pointer-events:none;
+  color:var(--faint); opacity:.5; will-change:transform}
+.scope-mouse svg{display:block}
+
 /* the filter is expensive to composite while printing, and means nothing there */
-@media print{ .scope-goo{display:none} }
+@media print{ .scope-goo, .scope-mouse{display:none} }
 /* leaves the site, so it is set apart from the scopes it sits beside */
 a.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.22rem;
   font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;
@@ -640,6 +650,25 @@ mark{background:var(--accent-soft); color:inherit; border-radius:2px; padding:0 
   </div>
 </footer>
 
+<script>
+// brand.js — the Allen Institute mark, inlined so the site stays a folder of
+// files with no network calls and the single-file bundle keeps working offline.
+//
+// Source: the apple-touch-icon served by alleninstitute.org
+//   https://cdn.prod.website-files.com/69a0ca6ef8ecfacbc1d10ea2/69e679ac5d6c5599fbf838c5_webclip.png
+// 256 x 256 PNG. The circle is opaque and the "a/" is knocked out to full
+// transparency, so the alpha channel doubles as a mask: paint any colour
+// through it and you get the mark in that colour. That is how the header mark
+// is themed and how the favicon cycles colour, from this one asset.
+//
+// brandColor is the periwinkle the artwork ships in, measured off the file.
+
+window.BRAND = {
+  color: "#6464ff",
+  mark: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAF/FJREFUeAHtnWtyE0nWho+N3NERNjPqFbRYAWIFyCvAXgEioDvmH2IFyCto978JZgjMCrBXQHkFiBXgbwUjGIjoCIP0nddkeYSsS5Xqknmy3idCLVmofVHpvOeSJ0+KEEIay5YQ0/zjH9POt2/SnkykM51Ke3tbOltb8iv+Tb/u6F0bz6ev13/rrPp++toL97qx3o3d4wt8rT/jo94u9Gdcfb27KxfHx1tjIWahABhgMJi2v3wRGHq31ZK7MGw1xK4aIQy7LX6BAEAQLvT3eq+3EQTiX//aGgkJHgpAYMDY//tf6d26JfdnDL0jNhk5YTjH4709GTFiCAsKgGcQwn/9KgdqKHfV2HuGjT0rEIWR/q1nOzsy+uc/ty6EeIMCUDPw8J8+yYHz8AfiP4T3zbUg3L4tCSOEeqEA1MCTJ9Oe3t3XW8/dyHISFYTXKpAJo4PqoQBUBIxei2EP1LP1hV5+U1BIfK2Fz1OKQTVQAEpkxtMPhEZfNkgV/mRkUC4UgIIgp//8+crLPxCG97WgQnCqd2e61HgipBAUgA1hiO8fLDHqXaJRwRGjgs2gAOTANeQcaPX+odDbB4WKwYlel9f//vdWIiQzFIAMuDD/qTC3Dx4XFRwxPcgGBWAFNHy7UAiyQQFYAA0/HigEq6EAzEDDjxcKwWIoAA5U9bWI9KoBvfiNhkLwIxSAObA55/JSurrEB0FAU09XSHS4XYqPmr5qQAFYQ7o9Vz8w2LF33w3ZIJGA5cMm9xFQAHLy22/TropATx+iF4DRQTwMNRo4koZBASiA28vfVy/ykJGBfZqYFlAASsJtBOrL98iAGKZJaQEFoGQYFcRBU1YLKAAVovWCvt49pxDYJfZogAJQAxQC28RcG6AA1IjWCYZ6h05DdhnaJLqVAgpAzbgawVBYLLTKqNWSw1hSAgqAJ5gW2AUpwWQiz16+3DoV41AAPNLvT9taYBrqB+qpEIuYTwkoAAHAaMAumE94eSmPTk5snmdAAQgEd8jnW4qAPZASaCS3b7EuQAEIjMePp8dMCezhGocOrR2Kui0kKLSwhGEkjduUYh1Ebnp7p0u9AzEEI4BAQV0AA0qEWMRMcZACEDCaDmAGAUSAjUP2MCECFIDAcfMH3gpFwBzb23L84sXWMwkY1gACB0UljQKC/hCRxUwmMlABDzqNYwRgBNYE7IIdhSrkjyRAKACGcJuJnguxyOjrV9kPrWGIKYAhtKg0xPl3QizSbbXkjQQGBcAY377JwDWdEHv0QqsJUACMgRASbaf60GTvedPRCK4fkghQAAzies7ZLWgUiMDvv0//kABgEdAwWhREf0BPiFW8NwsxAjCMFpWwtMRUwC5D33sHKACGcanAn0Is84c7U8ILFADj6NryMVcFzPMG8yDEAxQA42BVACOrhVimjWEwPkSAAhABbl59IsQsmCeg0Vzty4MUgHjgsqB9enXXAygAkcAoIAqSuk8fogBEhBYDuU/AMD6uHwUgIi4vBQdVsC/AIFjJ8XESMQUgItxWU/YF2MRLDYcCEBk4qEKIKXx5f0ABiAw3lz4RYgZdAvQWtVEA4uRciBXGrZa/qI0CECH6gToRYgKkbD6PFKMARAg+UBpWXggJnlu3/DZwtSQABoNp+6+/pP31q3Qmk8WHY6pSjnHb25PR8bHNk1hr5kxvPGMwYDAt2PeBorUKAAz982fp6sOu/vF31UvhcUefuz70YntNTKKvxSAMCMBIXzv69k3Ob9+WhKJwg0QoAEHj2/uDSicCweA/fZIDzUnvqqHimKuOVIRb/jrztZwSGv3+tK3v+3+EhArafvfFM6ULALY0aij/UL6PqupJzbi98UcUgquzBT9UKbqkEPt19/0vohQBcKE9ws2eBDKjjkJwlSqd6N1DIUHhGn/uSAAUXgWAx1fjR6g5lIAGVLrz2l+FMn3VEyMhIRLM1u3CAqC5fdBHVbkDGj/4GrnkGQpAYPhs+11EIQHA8ALMOJfAQTTga+SST7QIeCEkNIIa3FJIAFTNzJxWm4oAquPSENwaM5dHAwHe323ZDoaNBcAdV90RQ+D33dmRRtUE9G+mAIRDEtPpwCaPqUbKostjB9IQ0CwlJAhCaPyZZyMBsOj9Z1GjaEwUoNfpoxDvhND2u4hNIwCT3j8F4uXzNJaauRDinRC9P8gtANa9f4oqMhtkSC2E6v3BJhGAae8/Q08awGTCCMA36jCDndacSwBi8f4glr+DBE8SQs//MvJGALF4f+GBmqQOQj+rIbMAuK6/jkQCJ+aQqgmt7XcRmQVA/5jYhktwcCapmuDPa8wkAOihV48ZTfMMlJmDM0mVWPD+IJMAhL7jLydoxTwMdVmGxEHIlf9ZsqYAPYmDRD3/PXd4BiGVYSXCXDsUNIKlP0wTfq1/w2nIyzEkHkJu/JlnrQCo4VjrmBvpBRjp7/1e7xN6e1I3obb9LmKlALgBnz0Jlx+MfXdXLjgenPjEkvcHKwXg8lIGW5UODs8MjPpCf5dzLUiOVGFHNHYSKKaOZ18pANvb8kC9a93cMHaG8cQI5lLOpQJQU+ff1Qk/auzvYew//SQJl+eIVdRhmvL+YKkAYLts2d4f7bf6JiUs0JHYQOPPixdbQc37y8KqFKAnxbj27pOJJDy/j0SOmcr/LAsFoED4n8j3HvuEp/iSpmCl7XcRCwUgR/gPD3+OJhsaPGkwJr0/WJYC9JY8j6465PDnavAnNHjSdOD9daUqEaPcEIDffpt258L/61ZaenlCbmB65eqGAKihI/+/cJNMgh5nRIhvLLX9LuKGALRacqqKdiyEkJVYa/vFsXjzJxPd2A7MRhxCsmHN+y86Fq/w8eCENJQzS87Sbes/mD8clwJAyGZYS5Mx1autKX539kkKACE5wdKfpeL4XGNfb/bfKACE5Mda5X92puf92X+gABCSA2ttvxjqIz96faYAhBTAlPdfMNG7jWa/9AsKACEZsej9Nffvzz+PZr/0MQWAkIxYmfWfsuw8DxWyu+ljCgAhGbF0mtSC3H8WpgCE5MFa2696/6UzPWafpwAQkgGDm35WHefXdhECBYCQdVjz/llO80KEgHsKACFrsFb8E1l/mK/+TVd7AigAhKzG1EyMrGd5pisBFABCVuAG45ghx1meVysBFABClmCt8cd1+PWyvDaNEigAhCzHWuX/aY7XtjEboNEC8OTJ9Dm2Sgohc8TS9ruKn3+WdksaiDv2/JV8D5f2hZA51JhMnfO3rO13FZOJdBslAIPBtP35szxV4x8KIcsZYziuGME5tL7kBEuBjRAAhPk46lyNv69ftoWQFWj4f2qp8UeNP2vl/wdQCIxWAJy37+vDB3rrabhDSCastf2qYPU3Ock7ugjAnWrU04fw9j0hJCcxtv0uQ6Piv5sVAOfhse7Z1Yt2351oxPCeFCKyTT8rUXv5xYQAzBn7XQ3ne/p1J/33TcIfQhZg6py/It7fEWYEAIP/9EkOtBKbGvv1AAMYu4oAIVVgyvurLeRp/LmB2lEYRcDUw6NSr+uZB/Du+lhYuCN14Rp/EjGCa2DrSkG8CcBsld55+DYMnt6deMJa5f9pGalvrQIwZ/Q9ISQALLb96tr/gRSktj4AhCv6Jj9Uo8cvzUo9CQ3rs/43plIBcFVKdCn1WKknIQLvf3kZf9vvMioRABi+3j0vuERBSB0kJydbYzFCmd4flCoALtR/RcMnVrDU+APvnw7zLItSBADFvS9frgz/gKE+sUJMs/43pfBAEHh9Nf53MH4hxBBNavtdRiEBwEQdvXvLkJ9Yo0mbflaxsQA44x8KIQaJcdZ/XrACspEA0PiJcUzN+keaXVWUnVsAaPzEOtZm/UsF3j8llwC4AwWHQohRLLb9ilTTNq9RRb4UQJch3gohtmls2+8iMgtAVVVIQuqiCbP+85C3CFipEhFSNdYq/1V7/8lEPmYSgMePpwf0/sQ6rZaciBGq9v5AI4BxJgHApB4hxDDWGn/K2O+/jjwpQE8IMYzBWf+F5v1lIdMqgAtFOkKIUdj2u5hMKYCGIh0hxDamDvqUmgrul5cZIgCtFHaEELskuvQ3EiPUuNw+xiCUwtuBCQkZLWCb8v5uhF4dXIkiBYBEC6rcL15smZn352b996QePuI/TReAI0u7wkhurFX+6/L+IFsEgEqhxAmMfygkStj2uxpNja4EYO1MwJ0dGelKQGw8U+M/FhIz3PSzAvQA4H5tBODWT2OJAvB37NP44wbe/9YtScQIdXt/kK6MZK0BmFlGWQY+FK2W3Gtazh9xCrcKU8d8a4RdedffLPqZuLbnTAKg6mStkeIH9A8+3d2Ve5Y+FGXRRAGw1Pbb70/beo1qnait9vx/6eNM5wJofpKo98QHydq5fvidjzTcaWzIr9ftIsIazlKstf1qjc3HTtskfZApAnBHJ1mboZ64kL/R+X5kNZy1cNZ/JvKlAMAZkoVaAD7sqPLvNzHkX8KZNIMzbvpZz2wdLFcjkHrUQxTTJFCQ69PrL+REmoG16+7D+yezX+QSAKeuIYpAord9zfUP6fVv4hQ/kYjBZ5Kz/tejP/P97Ne5W4Gxfqh51n4gIpDI93X9fbb0rkYjo0chR28lwNw/A4iSf/haNgTLFyoEwzoml8wxdgc7nFja5hkC7njpMs5yHGPApodrvxDX9ntHjIDroCszH8QD+nN/cUX9KzbeDIRv8vLl1kA9C974qqetwuhP9H5/b0/u6MUe0Pjzg/QI0Ztsfr0SvT3DNcC1T9tJA4Btv9lIZo0fbBwBzOO8S08fPtAPBu6L9Azgl4SBn4uxc9yskF4v7D9HRKAC25l7Ca7BhT5/rq8b/e1vcnp8/OOHR/PYE72rcwfbDej9s4OGPgj37HOZGoGy4IpvJ+6GJY4upgnpBerqDWLw9/nQM81J0Zmkr8WHbYzNRyzkVc/89QKDwbT911/Szvr+6zVLtrf9CgBn/WdnPv+/ek4I2RDUgTQF/I94BCmoFYfhvP878dNRO9ZI+pf5JzkRiGyMyye91WKstf26FNlLO/0i7w8oAKQQGoKfiyfY9puLhdeJAkAKscyz1PBzOes/B5eXjABIBWhO6yUFsFb8E7/e/2x++S+FAkAK4T5YidSLqaVh395/VZRGASBlUGsdwHWCmqHGWf8LWRb+AwoAKYNEasLatN+aZ/3fALWSZeE/oACQwrhwvK6hI5z1n+/nr5wFQQEgZVF5MZCz/vOR5WQkCgApi8qnDlkbTuuz7deRrHsBBYCUgnqbRKpl3Gr56TnYBN/eH2RplKIAkFJw27MrqwNgKcvYrH+vub9kPBuBAuCAYut67TshRagsDbDW9quC1RePZF0qpQA4kK9pyNb9/ffpgZBNqaQQyLbffOQpllIA5Gqt9nmar00mYYy5skhVOTo3/eQjT5t04wXAefzhzFM917xBcgIvXcGYMFPn/Pn2/kCF+CTraxstAMj71eO/WvBPvpdvLFN2HcCU91fj9xpB5k2XGisA6YRcWTyggVHAhqgBlFYHsDjrX++64pG86VIjBSDjeOw/hORGI6oy6wDWKv+mvD9onABg8KUa/5sMeVpXFX0gJBdljQkz2vbrdQVpk2JpowQAxv/ly5XnzxqmPceFFZKLksaEcdZ/DjZdKm2MAGxg/KD99evCIiFZQdExYfD+q/awh4aVtt9FNEIAcIE2MP6Uni4Vsh6QgxLGhCWr9rCHhlXvD6IXgJmC38bVWS1sDVQEfPd2m6HomDBLjT8uReyJR4q8X1ELAE4nKukwTIjAMb6fkKxsVAewOOvfc9tvofcrWgFQY32qF+ZtiRcH/QJvWBTMTCIbwLbf7KBWUvT9ilIAdPnuDzX8Yyn5FBaICSIKisB6NhkTxk0/+UDPf9H3KyoBmNnSW9n6PUUgF7mKgZz1nx3XJTmUgkQjAAj5cfBikWJfVlIRYE1gLXn2BZia9f/48fTA86afUlIl8wIAT6wh/9sqQv5V4OLr7R27BZeTZ0yYtVn/Ptt+kSqV1SVpWgBSry9+l2H+YJ/AYrKOCbPY9iseP3NlFkpNCgB2Xfnw+stAn4CK0QfWBRaSJQ1g2292jsoslG6JIZBzq9HD2/YkXIaay1pbyqoE1379atUmGef974gRIPIadX4QD1TxXpmIAFx1Hx8k3+F+FoaIBrBEJA0G6dnnz/Jh3Q45a5V/n95fQ/99KZmgIwA3YAFveE9skujtyFJ1uyi4ZuqpXmWtkLdacsfK2r9P7y/fP0dDKZngBABho3qOvj58IHYNf55EIhYCF+ofuHFYmZdGXTX7kRgBw2Plx/mRtVBlmtSSQIDn2N6WB874vRf2SqaHm4bFF3p/pKGcqUGXy3BijVAfS6G5r5nFWf8qcrVTReif4jUCSI1eq+h9ic/oVwLvp3/32cuXW2b2vYOyIjRr3t+1/fqYDVFJ6J9SqwC4Kj5yxPu4l4YZ/RLGrmHmLNTIIL1uUmJaZin3Byjs1t35V4dIVi4ArnAC5URuSINfz0gvPBposJ125JppasN5eFyrboVCjbbfysLasvHh/d1Ov/2qRbKWCMC1y7JbbnMgCjh0472mDReaNl3o1+PdXbk4Ps4/OccNSWnr9+ro9+no9/sV3k2/htF3pGL05x2uO7c+JNB0JjUXpPU63KtD/GtLAVRF3/iemhoxY31vr4UA4uCe68y+qA7jXoe1xh+3FP1W6qXSvH+W2lYBLi/l0c6OdD3voIqVthrWjTB9K8wuD2uV/4d1Vv71Z/2pheGh1ERtnYCYE+eWM8wMeyTlYnTWf19qAu/P7dv19hnU2grsDo80s/RDSoebfpaQFv02qekUofa9AG7dm5tlGob7gCdiBA+z/g99LIt62QyEAgdyHSFNwlT3oy5d1znw41ndy70p3nYDaiSApcFESCOw1Pbb709RVK1rxQoV/2PxhNftwKqyhyLiRflIfVib9qurVXXN+6ttuW8ZXgUAKwOtlhwiPxQSLZz1fxPMQfBt/MD7QBB4BlQ/KQLRcsZZ/z+CVm9NgfsSAEFMBKIIRI23/HZDKvX+MP7d3eq29+YlmJFgFIH4cIdXJGIEtP1W6f1T4697rX8VQc0EpAhEB3N/R4jGD4LsFp850rsjxCSc9vs/QjV+EORUYEYCUcC2Xwnb+EHQU4EZCdiE3v+aZG9PDkM1fhD0uQCMBGzCWf/X6/zBev6U4A8GgQhcXso9YcegGVotOREjuE0/Zbf9HoWyzr8OEycDoWNQ1fQeNxCFj7W2X/X+PSl35qH39t48mDoc1G0g4lbigGlw2y+mOz+yZPzA3OnA7g1+JiQ4rHn/stp+UaPS276laUcpQa8CrAKz6vXuDVcIwsGdb3Ahdijc+YdlPo16Di0J3yxmBQC45Zs3kuM8OkLKwg3wHIhhTAtAypMn06GIv2ObSePA0p7XQR5lEYUAAORzevecKQGpkrpO7KkLc0XAZaAAw6YhUiUI+Xd35V4sxg+iiQBmYUpASma8vS2PLB1nlpUoBQBwHwEpiaTVkkcxef1ZohUAgOmumhYMNS2oc8QziYNoCn2riFoAUjDpRUXgFaMBkpGovf4sjRCAFNYGyBrQzvvMYkffpkSzCpAFtBGrst/RixxdMYcUAxX+vT250yTjB42KAGZh3wBxJPI910+kgTRWAFJcWoAiYZlbQknguA08z2Jc2stD4wUAuD0FQ334UEjsoLqPcP849Gk9dUABmIFCEDU0/AVQABZAIYgKGv4KKAAroBCYhoafAQpABigEpqDh54ACkAO3v6AnXD4MkUSr+q+bto5fFArAhrh5cogIekJ8gc6913odTpu6jl8UCkBB0vRAP4j3GRXURqK3Mw3zTxjmF4MCUCLYdKR3fb09EDYWlc1Vbq+3hN6+PCgAFfH48fRAowKcOEMx2ByG+BVDAaiBVAyYJmQCR8CdCT19LVAAagbnGagI9OR7ZNATAi+f6Hty3mrJaRP24IcEBcAzrm6A2335fr5B7OnCtcHjXpfteOirRygAgeFOPEqjhLti+9ATFO5Gaujvv32T0U8/SUIPHxYUAANAFCYT6aghdfV2V8UBUUIw0YL+PthaC88+0sfv8fXOjoxo7OFDATDMYDBtf/kiHScOHX2qrfe/4t6JxNW9Pnf1WPIx1v8XRg0vPnbnLXzEc/rzrgweRv7zzzLmWrxdKAANBM1Li56nx24e/w+BE/cmx0bSUwAAAABJRU5ErkJggg==",
+};
+
+</script>
 <script>
 // config.js — disciplines, datasets, categories, and the colour rules for the site.
 // Plain data. Edit values freely; leave the "window.X =" wrappers alone so the
@@ -2202,6 +2231,74 @@ function doPrint(){
   window.print();
 }
 
+/* ── the mark, and a favicon that will not sit still ──────────────
+   One asset does both. The artwork is a filled circle with the "a/" knocked
+   out to transparency, so painting a colour through its alpha gives the mark
+   in that colour: CSS does it with a mask for the header, and here a canvas
+   does it with a destination-in composite for the tab.
+
+   The hue walks a slow loop from the brand periwinkle. Saturation and
+   lightness are held at the brand's own, so every frame of the cycle is a
+   colour the mark could plausibly have shipped in. */
+const FAVICON_STEP = 420, FAVICON_LOOP = 24000;
+
+function brandHSL(){
+  const hex = (window.BRAND && window.BRAND.color) || "#6464ff";
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  const dl = max - min;
+  const s = dl === 0 ? 0 : dl / (1 - Math.abs(2 * l - 1));
+  let h = 0;
+  if (dl){
+    h = max === r ? ((g - b) / dl) % 6 : max === g ? (b - r) / dl + 2 : (r - g) / dl + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  return { h, s: s * 100, l: l * 100 };
+}
+
+function startBrand(){
+  const link = $("#favicon");
+  if (!window.BRAND || !window.BRAND.mark) return;
+  const root = document.documentElement;
+  root.style.setProperty("--mark", `url("${window.BRAND.mark}")`);
+  root.style.setProperty("--brand", window.BRAND.color);
+  if (!link || !document.createElement("canvas").getContext) return;
+
+  const base = brandHSL();
+  const img = new Image();
+  img.onload = () => {
+    const size = 64;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = size;
+    const cx = cv.getContext("2d");
+    let t0 = null, timer = null;
+
+    const paint = now => {
+      const phase = ((now - t0) % FAVICON_LOOP) / FAVICON_LOOP;
+      const colour = `hsl(${(base.h + phase * 360) % 360} ${base.s}% ${base.l}%)`;
+      cx.clearRect(0, 0, size, size);
+      cx.fillStyle = colour;
+      cx.fillRect(0, 0, size, size);
+      cx.globalCompositeOperation = "destination-in";   // keep only the circle
+      cx.drawImage(img, 0, 0, size, size);
+      cx.globalCompositeOperation = "source-over";
+      try { link.href = cv.toDataURL("image/png"); } catch { clearInterval(timer); }
+      root.style.setProperty("--brand", colour);
+    };
+
+    t0 = Date.now();
+    paint(t0);
+    if (reduceMotion()) return;          // a blinking tab is exactly what that setting is about
+    timer = setInterval(() => paint(Date.now()), FAVICON_STEP);
+    // nothing to animate while the tab is in the background
+    document.addEventListener("visibilitychange", () => {
+      clearInterval(timer);
+      if (!document.hidden) timer = setInterval(() => paint(Date.now()), FAVICON_STEP);
+    });
+  };
+  img.src = window.BRAND.mark;
+}
+
 /* ── view plumbing ───────────────────────────────────────────── */
 
 /* Deep links. #/tables and #/sheet open a view; #term-<id> opens the glossary at
@@ -2376,7 +2473,84 @@ function setViews(open){
   }, ms);
 }
 
-function openViews(){ clearTimeout(viewsTimer); setViews(true); }
+/* ── the mouse ────────────────────────────────────────────────────
+   Now and then, when the row opens, one runs across it and disappears at the
+   bottom edge of the scope — which is where the search field begins, so it
+   reads as having gone behind it. Everything about the run is drawn fresh each
+   time: which side it enters from, how the path bends, how fast it goes.
+
+   Top-down, so the drawing is symmetric about its long axis and can simply be
+   rotated onto the tangent whichever way it is heading. */
+const MOUSE_CHANCE = 0.4, MOUSE_DELAY = 260;
+const MOUSE_SVG =
+  `<svg viewBox="-8 0 56 20" width="30" height="11" fill="currentColor" aria-hidden="true">
+     <path d="M8,10 C1,11 -2,4 -7,6" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round"/>
+     <ellipse cx="14" cy="3.4" rx="2.8" ry="1.5"/><ellipse cx="14" cy="16.6" rx="2.8" ry="1.5"/>
+     <ellipse cx="26" cy="3.8" rx="2.6" ry="1.4"/><ellipse cx="26" cy="16.2" rx="2.6" ry="1.4"/>
+     <circle cx="33" cy="4.9" r="3.3"/><circle cx="33" cy="15.1" r="3.3"/>
+     <ellipse cx="20" cy="10" rx="13" ry="6.3"/>
+     <ellipse cx="36" cy="10" rx="6" ry="4.2"/>
+     <ellipse cx="42.5" cy="10" rx="2.6" ry="2"/>
+   </svg>`;
+
+const rand = (a, b) => a + Math.random() * (b - a);
+
+function runMouse(){
+  const scope = $(".scope"), wrap = $("#viewsWrap");
+  if (!scope || !wrap || reduceMotion()) return;
+  if (scope.querySelector(".scope-mouse")) return;      // one at a time
+
+  const box = scope.getBoundingClientRect();
+  const row = wrap.getBoundingClientRect();
+  if (!box.width || !row.height) return;
+  const W = box.width, H = box.height;
+  const y = row.top - box.top + row.height / 2;         // the middle of row two
+
+  // right to left or left to right, and out through the floor at the end
+  const rtl = Math.random() < 0.5;
+  const x0 = rtl ? W + 40 : -40;
+  const x3 = rand(W * 0.25, W * 0.75);
+  const p = [
+    { x: x0,                                   y: y + rand(-4, 4) },
+    { x: rtl ? W * rand(0.55, 0.8) : W * rand(0.2, 0.45), y: y + rand(-11, -3) },
+    { x: rtl ? W * rand(0.2, 0.45) : W * rand(0.55, 0.8), y: y + rand(3, 11) },
+    { x: x3,                                   y: H + 30 },
+  ];
+
+  const at = t => {
+    const u = 1 - t, a = u*u*u, b = 3*u*u*t, c = 3*u*t*t, d = t*t*t;
+    return { x: a*p[0].x + b*p[1].x + c*p[2].x + d*p[3].x,
+             y: a*p[0].y + b*p[1].y + c*p[2].y + d*p[3].y };
+  };
+
+  const el = document.createElement("i");
+  el.className = "scope-mouse";
+  el.innerHTML = MOUSE_SVG;
+  scope.appendChild(el);
+
+  const dur = rand(1500, 2100), scurry = rand(26, 34), t0 = performance.now();
+  const frame = now => {
+    const t = Math.min(1, (now - t0) / dur);
+    const here = at(t), ahead = at(Math.min(1, t + 0.01));
+    const angle = Math.atan2(ahead.y - here.y, ahead.x - here.x) * 180 / Math.PI;
+    // a little side to side, and a stride that squashes it as it pushes off
+    const wobble = Math.sin(t * scurry) * 5;
+    const stride = 1 + Math.sin(t * scurry * 2) * 0.06;
+    el.style.transform = `translate3d(${here.x - 13}px, ${here.y - 6}px, 0)` +
+                         ` rotate(${angle + wobble}deg) scaleX(${stride})`;
+    if (t < 1) requestAnimationFrame(frame); else el.remove();
+  };
+  requestAnimationFrame(frame);
+}
+
+function openViews(){
+  clearTimeout(viewsTimer);
+  const was = viewsOpen;
+  setViews(true);
+  // only on the way open, and only sometimes: a mouse every time is vermin
+  if (!was && viewsOpen && Math.random() < MOUSE_CHANCE) setTimeout(runMouse, MOUSE_DELAY);
+}
 function closeViewsSoon(){
   clearTimeout(viewsTimer);
   viewsTimer = setTimeout(() => setViews(false), CLOSE_DELAY);
@@ -2465,6 +2639,7 @@ function init(){
   if (started) return;
   started = true;
 
+  startBrand();
   $("#siteTitle").textContent = window.SITE.title;
   $("#refs").innerHTML = (window.SITE.references || []).map(r =>
     `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a>`).join(", ");

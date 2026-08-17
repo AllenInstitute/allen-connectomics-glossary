@@ -424,6 +424,74 @@ function doPrint(){
   window.print();
 }
 
+/* ── the mark, and a favicon that will not sit still ──────────────
+   One asset does both. The artwork is a filled circle with the "a/" knocked
+   out to transparency, so painting a colour through its alpha gives the mark
+   in that colour: CSS does it with a mask for the header, and here a canvas
+   does it with a destination-in composite for the tab.
+
+   The hue walks a slow loop from the brand periwinkle. Saturation and
+   lightness are held at the brand's own, so every frame of the cycle is a
+   colour the mark could plausibly have shipped in. */
+const FAVICON_STEP = 420, FAVICON_LOOP = 24000;
+
+function brandHSL(){
+  const hex = (window.BRAND && window.BRAND.color) || "#6464ff";
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  const dl = max - min;
+  const s = dl === 0 ? 0 : dl / (1 - Math.abs(2 * l - 1));
+  let h = 0;
+  if (dl){
+    h = max === r ? ((g - b) / dl) % 6 : max === g ? (b - r) / dl + 2 : (r - g) / dl + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  return { h, s: s * 100, l: l * 100 };
+}
+
+function startBrand(){
+  const link = $("#favicon");
+  if (!window.BRAND || !window.BRAND.mark) return;
+  const root = document.documentElement;
+  root.style.setProperty("--mark", `url("${window.BRAND.mark}")`);
+  root.style.setProperty("--brand", window.BRAND.color);
+  if (!link || !document.createElement("canvas").getContext) return;
+
+  const base = brandHSL();
+  const img = new Image();
+  img.onload = () => {
+    const size = 64;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = size;
+    const cx = cv.getContext("2d");
+    let t0 = null, timer = null;
+
+    const paint = now => {
+      const phase = ((now - t0) % FAVICON_LOOP) / FAVICON_LOOP;
+      const colour = `hsl(${(base.h + phase * 360) % 360} ${base.s}% ${base.l}%)`;
+      cx.clearRect(0, 0, size, size);
+      cx.fillStyle = colour;
+      cx.fillRect(0, 0, size, size);
+      cx.globalCompositeOperation = "destination-in";   // keep only the circle
+      cx.drawImage(img, 0, 0, size, size);
+      cx.globalCompositeOperation = "source-over";
+      try { link.href = cv.toDataURL("image/png"); } catch { clearInterval(timer); }
+      root.style.setProperty("--brand", colour);
+    };
+
+    t0 = Date.now();
+    paint(t0);
+    if (reduceMotion()) return;          // a blinking tab is exactly what that setting is about
+    timer = setInterval(() => paint(Date.now()), FAVICON_STEP);
+    // nothing to animate while the tab is in the background
+    document.addEventListener("visibilitychange", () => {
+      clearInterval(timer);
+      if (!document.hidden) timer = setInterval(() => paint(Date.now()), FAVICON_STEP);
+    });
+  };
+  img.src = window.BRAND.mark;
+}
+
 /* ── view plumbing ───────────────────────────────────────────── */
 
 /* Deep links. #/tables and #/sheet open a view; #term-<id> opens the glossary at
@@ -598,7 +666,84 @@ function setViews(open){
   }, ms);
 }
 
-function openViews(){ clearTimeout(viewsTimer); setViews(true); }
+/* ── the mouse ────────────────────────────────────────────────────
+   Now and then, when the row opens, one runs across it and disappears at the
+   bottom edge of the scope — which is where the search field begins, so it
+   reads as having gone behind it. Everything about the run is drawn fresh each
+   time: which side it enters from, how the path bends, how fast it goes.
+
+   Top-down, so the drawing is symmetric about its long axis and can simply be
+   rotated onto the tangent whichever way it is heading. */
+const MOUSE_CHANCE = 0.4, MOUSE_DELAY = 260;
+const MOUSE_SVG =
+  `<svg viewBox="-8 0 56 20" width="30" height="11" fill="currentColor" aria-hidden="true">
+     <path d="M8,10 C1,11 -2,4 -7,6" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round"/>
+     <ellipse cx="14" cy="3.4" rx="2.8" ry="1.5"/><ellipse cx="14" cy="16.6" rx="2.8" ry="1.5"/>
+     <ellipse cx="26" cy="3.8" rx="2.6" ry="1.4"/><ellipse cx="26" cy="16.2" rx="2.6" ry="1.4"/>
+     <circle cx="33" cy="4.9" r="3.3"/><circle cx="33" cy="15.1" r="3.3"/>
+     <ellipse cx="20" cy="10" rx="13" ry="6.3"/>
+     <ellipse cx="36" cy="10" rx="6" ry="4.2"/>
+     <ellipse cx="42.5" cy="10" rx="2.6" ry="2"/>
+   </svg>`;
+
+const rand = (a, b) => a + Math.random() * (b - a);
+
+function runMouse(){
+  const scope = $(".scope"), wrap = $("#viewsWrap");
+  if (!scope || !wrap || reduceMotion()) return;
+  if (scope.querySelector(".scope-mouse")) return;      // one at a time
+
+  const box = scope.getBoundingClientRect();
+  const row = wrap.getBoundingClientRect();
+  if (!box.width || !row.height) return;
+  const W = box.width, H = box.height;
+  const y = row.top - box.top + row.height / 2;         // the middle of row two
+
+  // right to left or left to right, and out through the floor at the end
+  const rtl = Math.random() < 0.5;
+  const x0 = rtl ? W + 40 : -40;
+  const x3 = rand(W * 0.25, W * 0.75);
+  const p = [
+    { x: x0,                                   y: y + rand(-4, 4) },
+    { x: rtl ? W * rand(0.55, 0.8) : W * rand(0.2, 0.45), y: y + rand(-11, -3) },
+    { x: rtl ? W * rand(0.2, 0.45) : W * rand(0.55, 0.8), y: y + rand(3, 11) },
+    { x: x3,                                   y: H + 30 },
+  ];
+
+  const at = t => {
+    const u = 1 - t, a = u*u*u, b = 3*u*u*t, c = 3*u*t*t, d = t*t*t;
+    return { x: a*p[0].x + b*p[1].x + c*p[2].x + d*p[3].x,
+             y: a*p[0].y + b*p[1].y + c*p[2].y + d*p[3].y };
+  };
+
+  const el = document.createElement("i");
+  el.className = "scope-mouse";
+  el.innerHTML = MOUSE_SVG;
+  scope.appendChild(el);
+
+  const dur = rand(1500, 2100), scurry = rand(26, 34), t0 = performance.now();
+  const frame = now => {
+    const t = Math.min(1, (now - t0) / dur);
+    const here = at(t), ahead = at(Math.min(1, t + 0.01));
+    const angle = Math.atan2(ahead.y - here.y, ahead.x - here.x) * 180 / Math.PI;
+    // a little side to side, and a stride that squashes it as it pushes off
+    const wobble = Math.sin(t * scurry) * 5;
+    const stride = 1 + Math.sin(t * scurry * 2) * 0.06;
+    el.style.transform = `translate3d(${here.x - 13}px, ${here.y - 6}px, 0)` +
+                         ` rotate(${angle + wobble}deg) scaleX(${stride})`;
+    if (t < 1) requestAnimationFrame(frame); else el.remove();
+  };
+  requestAnimationFrame(frame);
+}
+
+function openViews(){
+  clearTimeout(viewsTimer);
+  const was = viewsOpen;
+  setViews(true);
+  // only on the way open, and only sometimes: a mouse every time is vermin
+  if (!was && viewsOpen && Math.random() < MOUSE_CHANCE) setTimeout(runMouse, MOUSE_DELAY);
+}
 function closeViewsSoon(){
   clearTimeout(viewsTimer);
   viewsTimer = setTimeout(() => setViews(false), CLOSE_DELAY);
@@ -687,6 +832,7 @@ function init(){
   if (started) return;
   started = true;
 
+  startBrand();
   $("#siteTitle").textContent = window.SITE.title;
   $("#refs").innerHTML = (window.SITE.references || []).map(r =>
     `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a>`).join(", ");

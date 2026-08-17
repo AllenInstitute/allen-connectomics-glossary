@@ -96,12 +96,14 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .topbar-in{display:flex; align-items:center; gap:1.25rem; padding-top:.7rem; padding-bottom:.5rem}
 .topbar-in .theme{margin-left:auto}
 .brand{display:flex; align-items:center; gap:.55rem; min-width:0}
-.mark{width:15px; height:15px; flex:none; border-radius:3px;
-  background:
-    radial-gradient(circle at 30% 32%, var(--accent) 0 2.6px, transparent 2.7px),
-    radial-gradient(circle at 72% 66%, var(--accent) 0 2.6px, transparent 2.7px),
-    linear-gradient(125deg, transparent 45%, var(--accent) 45%, var(--accent) 55%, transparent 55%);
-  border:1px solid var(--line-2)}
+/* The Allen "a/" mark. The artwork is a circle with the glyph knocked out to
+   transparency, so it is used as a mask and painted rather than drawn: one
+   asset, any colour, and it follows the favicon's cycle. --mark and --brand are
+   set from data/brand.js at startup. */
+.mark{width:17px; height:17px; flex:none;
+  background:var(--brand, var(--accent));
+  -webkit-mask:var(--mark) center / contain no-repeat;
+          mask:var(--mark) center / contain no-repeat}
 .brand-t{display:flex; flex-direction:column; line-height:1.15; min-width:0}
 .brand-t b{font-size:.95rem; letter-spacing:-.012em; white-space:nowrap}
 .brand-t i{font-style:normal; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em;
@@ -168,8 +170,15 @@ code{font-family:var(--mono); font-size:.88em; background:var(--panel);
 .view:hover{color:var(--ink)}
 .view[aria-current="page"]{color:var(--accent-ink); font-weight:600}
 
+/* Sometimes something runs across the row when it opens. It is clipped by the
+   scope, which is why it vanishes at the bottom edge — exactly where the search
+   field begins. */
+.scope-mouse{position:absolute; left:0; top:0; z-index:3; pointer-events:none;
+  color:var(--faint); opacity:.5; will-change:transform}
+.scope-mouse svg{display:block}
+
 /* the filter is expensive to composite while printing, and means nothing there */
-@media print{ .scope-goo{display:none} }
+@media print{ .scope-goo, .scope-mouse{display:none} }
 /* leaves the site, so it is set apart from the scopes it sits beside */
 a.out{text-decoration:none; color:var(--faint); display:inline-flex; align-items:center; gap:.22rem;
   font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;

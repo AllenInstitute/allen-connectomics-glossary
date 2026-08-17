@@ -15,6 +15,7 @@ There is no build step, no server and no dependencies: clone the repo and double
 | `index.html` | The site: Glossary, Tables, Cheat sheet |
 | `builder.html` | Cheat sheet builder — place blocks on pages by hand |
 | `data/` | **Everything you would want to edit lives here** |
+| `data/brand.js` | The Allen "a/" mark, inlined once and used for both the header and the favicon |
 | `assets/` | Styling and behaviour |
 | `dist/` | The same site squashed into one self-contained file, for emailing |
 | `scripts/` | Importers and the bundler; not part of the site |
@@ -97,6 +98,20 @@ The glossary always shows every term of the active discipline and marks the hand
 belong to one dataset with a chip. The cheat sheet has its own dataset selector, next to
 its other print options, for the table section it includes.
 
+## The mark
+
+`data/brand.js` carries the Allen Institute "a/" mark — the apple-touch-icon from
+alleninstitute.org, inlined as a data URI so the site stays a folder of files with no
+network calls. The artwork is a filled circle with the glyph knocked out to
+transparency, so its alpha doubles as a mask: the header paints it with CSS `mask`, and
+the favicon paints it onto a canvas with a `destination-in` composite. One asset, two
+uses, any colour.
+
+The colour walks a slow hue loop from the brand periwinkle — a full turn every 24
+seconds — holding the brand's own saturation and lightness so every step is a colour the
+mark could have shipped in. The header mark follows the same value, so tab and page
+agree. Reduced motion paints it once and leaves it alone, and so does a hidden tab.
+
 ## Colour means one thing at a time
 
 Each palette has one meaning, one place it appears, and a legend where it appears:
@@ -131,6 +146,15 @@ action potential is not: `scripts/hodgkin-huxley.py` integrates the 1952 equatio
 RK4 and `scripts/hodgkin-huxley-svg.py` renders the result, simplified with
 Douglas-Peucker so the shape survives and the file stays small. Peak +41 mV, undershoot
 −76 mV, about 1.2 ms wide — the trace is the simulation, not a drawing of one.
+
+## The mouse
+
+Roughly two times in five, when the views row opens, a mouse runs across it and
+disappears at the bottom edge of the scope — which is where the search field begins, so
+it reads as having gone behind it. The path is a fresh cubic Bézier each time: which side
+it enters from, how it bends, how fast it goes. It is drawn top-down, so it is symmetric
+about its long axis and can simply be rotated onto the tangent whichever way it is
+heading. `MOUSE_CHANCE` in `assets/app.js` is the dial; reduced motion turns it off.
 
 ## Multi-sense entries
 
