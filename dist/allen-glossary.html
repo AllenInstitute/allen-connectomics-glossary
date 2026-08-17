@@ -2447,6 +2447,41 @@ function reduceMotion(){ return mq("(prefers-reduced-motion: reduce)"); }
 // and a swipe up puts it away, which is the only way to get the space back
 function canHover(){ return !mq("(hover: none)"); }
 
+/* Every so often, while the views are put away, the surface draws itself up
+   into a ball, hangs for a moment and flows back into its pill. It only ever
+   happens in the top row, where there is nothing to be mistaken for a link to
+   something below. */
+const BALL_MS = 1100, BALL_LIFT = 5, BALL_EVERY = [7000, 14000];
+let ballAt = null, ballTimer = null;
+
+/* The pill drawn back into a ball, k running 0 (pill) to 1 (gathered). Width
+   collapses towards the height so it goes round, it plumps a little as it does,
+   and it lifts — a drop pulling itself together. The springs chase whatever
+   this returns, which is where the bounce comes from. */
+function ballShape(pill, k){
+  const cx = pill.x + pill.w / 2, cy = pill.y + pill.h / 2;
+  const h = pill.h * (1 + 0.12 * k);       // plumps as it gathers
+  const w = pill.w + (h - pill.w) * k;     // ...and closes on that height, so
+  return { x: cx - w / 2,                  //    the peak is a circle, not an egg
+           y: cy - h / 2 - BALL_LIFT * k, w, h };
+}
+
+function scheduleBall(){
+  clearTimeout(ballTimer);
+  // a hidden tab gets no timer at all, rather than a timer that wakes up to
+  // decide it has nothing to do
+  if (reduceMotion() || document.hidden) return;
+  ballTimer = setTimeout(() => {
+    const wrap = $("#viewsWrap");
+    const shut = !wrap || wrap.getBoundingClientRect().height <= 10;
+    if (shut){
+      ballAt = Date.now();
+      trackScope(BALL_MS + 400);        // keep measuring until it has settled
+    }
+    scheduleBall();
+  }, rand(BALL_EVERY[0], BALL_EVERY[1]));
+}
+
 // keep re-measuring while a CSS transition is moving the layout under us
 function trackScope(ms){
   const until = Date.now() + ms;
@@ -2661,7 +2696,29 @@ function placeScope(){
   };
 
   const d = put($('.blob[data-row="disc"]'), $('.discb[aria-pressed="true"]'), 7, 4);
-  const v = put($('.blob[data-row="view"]'), $('button.view[aria-current="page"]'), 5, 4);
+
+  /* With the row shut there is nothing down there to reach for, and a neck
+     trailing off a pill towards nothing reads as a smudge rather than a link.
+     So below a few pixels of open row, the lower blob and the neck are simply
+     not drawn and the surface is a clean lozenge around the discipline. */
+  const wrap = $("#viewsWrap");
+  const rowOpen = wrap ? wrap.getBoundingClientRect().height : 0;
+  const v = rowOpen > 10
+    ? put($('.blob[data-row="view"]'), $('button.view[aria-current="page"]'), 5, 4)
+    : put($('.blob[data-row="view"]'), null);
+
+  // ...and while it is shut, the surface gathers itself into a ball now and
+  // then. Interpolating the target rather than the position lets the springs
+  // do the squashing, so it arrives with a wobble instead of a slide.
+  if (d && ballAt != null){
+    const p = (Date.now() - ballAt) / BALL_MS;
+    if (p >= 1) ballAt = null;
+    else {
+      const s = blobState($('.blob[data-row="disc"]'));
+      s.target = ballShape(d, Math.sin(Math.max(0, p) * Math.PI));   // out and back
+      if (still) s.cur = { ...s.target };
+    }
+  }
 
   // the ligament runs centre to centre; the two blobs cover its ends, so what
   // shows is the neck between them
@@ -2826,6 +2883,11 @@ function init(){
   let rz = null;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(placeScope, 80); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeScope);
+
+  scheduleBall();
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) clearTimeout(ballTimer); else scheduleBall();
+  });
 
   /* Reaching for the scope opens the views; leaving the header closes them a
      little later. The delay is generous because the row is between the pointer
